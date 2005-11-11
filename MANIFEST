@@ -13,6 +13,7 @@ lib/HTML/Tested/Test/List.pm
 lib/HTML/Tested/Value.pm
 lib/HTML/Tested/Value/Marked.pm
 lib/HTML/Tested/Value/EditBox.pm
+lib/HTML/Tested/Value/PasswordBox.pm
 lib/HTML/Tested/Value/TextArea.pm
 lib/HTML/Tested/Value/Tree.pm
 t/001_load.t
@@ -22,5 +23,6 @@ t/030_edit_box.t
 t/040_textarea.t
 t/050_tree.t
 t/060_pager.t
+t/070_password_box.t
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

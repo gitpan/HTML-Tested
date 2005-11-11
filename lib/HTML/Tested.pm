@@ -36,8 +36,7 @@ HTML::Tested - Provides HTML widgets with the built-in means of testing.
 
 =head1 DISCLAIMER
 	
-	This is pre-alpha quality software. Please use it on your own
-risk.
+This is pre-alpha quality software. Please use it on your own risk.
 
 =head1 INTRODUCTION
 
@@ -67,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -75,11 +74,11 @@ __PACKAGE__->mk_classdata('Widgets_Map');
 
 =head2 register_tested_widget(widget_name, widget_class, dont_use)
 
-	Registers widget to be available for the inheriting classes.
-	This implicitly creates make_tested_<widget_name> function.
-	C<widget_class> should provide behind the scenes support for the widget.
-	C<dont_use> tells HTML::Tested to not use the module at the time of
-	loading.
+Registers widget to be available for the inheriting classes.
+This implicitly creates make_tested_<widget_name> function.
+C<widget_class> should provide behind the scenes support for the widget.
+C<dont_use> tells HTML::Tested to not use the module at the time of
+loading.
 
 =cut
 
@@ -94,18 +93,17 @@ sub register_tested_widget {
 		}
 		$class1->Widgets_Map({}) unless $class1->Widgets_Map;
 		$class1->mk_accessors($name);
-		$class1->Widgets_Map->{$name} = $widget_class->new($class1, $name, @args);
+		$class1->Widgets_Map->{$name} = 
+			$widget_class->new($class1, $name, @args);
 	};
 }
 
 =head2 ht_render(stash)
 
-	Renders all of the contained controls into the stash.
-	C<stash> should be hash reference.
+Renders all of the contained controls into the stash.
+C<stash> should be hash reference.
 
 =cut
-
-
 sub ht_render {
 	my ($self, $stash, $parent_name) = @_;
 	while (my ($n, $v) = each %{ $self->Widgets_Map }) {
@@ -117,10 +115,9 @@ sub ht_render {
 
 =head2 ht_bless_from_tree(class, tree)
 
-	Creates blessed instance of the class from tree.
+Creates blessed instance of the class from tree.
 
 =cut
-
 sub ht_bless_from_tree {
 	my ($class, $tree) = @_;
 	my $res = {};
@@ -145,11 +142,10 @@ sub ht_absorb_one_value {
 
 =head2 ht_convert_request_to_tree(class, r)
 
-	Creates blessed instance of the class from Apache::Request
-	compatible object.
+Creates blessed instance of the class from Apache::Request
+compatible object.
 
 =cut
-
 sub ht_convert_request_to_tree {
 	my ($class, $r) = @_;
 	my @pkeys = $r->param;
@@ -164,14 +160,18 @@ sub ht_convert_request_to_tree {
 __PACKAGE__->register_tested_widget('value', 'HTML::Tested::Value');
 __PACKAGE__->register_tested_widget('marked_value', 'HTML::Tested::Value::Marked');
 __PACKAGE__->register_tested_widget('edit_box', 'HTML::Tested::Value::EditBox');
-__PACKAGE__->register_tested_widget('textarea', 'HTML::Tested::Value::TextArea');
+__PACKAGE__->register_tested_widget(
+		'textarea', 'HTML::Tested::Value::TextArea');
+__PACKAGE__->register_tested_widget(
+		'password_box', 'HTML::Tested::Value::PasswordBox');
+
 __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 
 1;
 
 =head1 BUGS
 
-	Documentation is too sparse to be taken seriously.
+Documentation is too sparse to be taken seriously.
 
 =head1 AUTHOR
 
@@ -192,10 +192,10 @@ LICENSE file included with this module.
 
 =head1 SEE ALSO
 
-	HTML::Tested::Test for writing tests using HTML::Tested.
-	See HTML::Tested::Value::* for the documentation on the specific
-	widgets.
-	See HTML::Tested::List for documentation on list container.
+HTML::Tested::Test for writing tests using HTML::Tested.
+See HTML::Tested::Value::* for the documentation on the specific
+widgets.
+See HTML::Tested::List for documentation on list container.
 
 =cut
 
