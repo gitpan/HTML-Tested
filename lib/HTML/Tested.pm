@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.05;
+our $VERSION = 0.06;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -164,6 +164,10 @@ __PACKAGE__->register_tested_widget(
 		'textarea', 'HTML::Tested::Value::TextArea');
 __PACKAGE__->register_tested_widget(
 		'password_box', 'HTML::Tested::Value::PasswordBox');
+__PACKAGE__->register_tested_widget(
+		'dropdown', 'HTML::Tested::Value::DropDown');
+__PACKAGE__->register_tested_widget(
+		'checkbox', 'HTML::Tested::Value::CheckBox');
 
 __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 
