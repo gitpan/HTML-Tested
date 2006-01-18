@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.06;
+our $VERSION = 0.07;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 

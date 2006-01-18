@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested'); 
@@ -21,5 +21,11 @@ my $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <input type="text" name="v" id="v" value="b" />
+ENDS
+
+$object->v('>b');
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<input type="text" name="v" id="v" value="&gt;b" />
 ENDS
 

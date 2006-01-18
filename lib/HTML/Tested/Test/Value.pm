@@ -21,6 +21,7 @@ sub _check_text {
 
 sub _convert_to_param {
 	my ($class, $obj_class, $r, $name, $val) = @_;
+	return if $name =~ /ht_id$/;
 	$r->param($name, $val);
 }
 

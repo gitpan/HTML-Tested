@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 use Data::Dumper;
 use Carp;
 
@@ -129,3 +129,22 @@ my $blessed = NL->ht_bless_from_tree({
 	] });
 is(@{ $blessed->l1 }, 2);
 is(@{ $blessed->l1->[1]->l2 }, 2);
+
+package L2;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_list('l1', 'LR2');
+
+package LR2;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_marked_value('v1');
+__PACKAGE__->make_tested_value('ht_id');
+
+package main;
+
+%_request_args = ();
+HTML::Tested::Test->convert_tree_to_param('L2', 'FakeRequest', 
+		{ l1 => [ { ht_id => 1, v1 => 'a' }, 
+					{ ht_id => 2, v1 => 'b' } ] });
+is_deeply(\%_request_args, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
+	or diag(Dumper(\%_request_args));
+
