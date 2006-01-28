@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested'); 
@@ -21,7 +21,7 @@ sub param {
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v');
+__PACKAGE__->make_tested_value('v', default_value => 'xxx');
 
 package main;
 
@@ -54,4 +54,8 @@ is_deeply(\%_request_args, { v => 'b', mv => 'c' });
 $object->mv(undef);
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b', mv => '<!-- mv --> ' }) or diag(Dumper($stash));
+
+$object->v(undef);
+$object->ht_render($stash);
+is_deeply($stash, { v => 'xxx', mv => '<!-- mv --> ' }) or diag(Dumper($stash));
 

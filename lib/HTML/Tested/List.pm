@@ -10,6 +10,11 @@ sub new {
 	$args{containee} ||= $c;
 	$args{name} ||= $name;
 	$args{renderers} ||= [ 'HTML::Tested::List::Renderer' ];
+	{
+		no strict 'refs';
+		*{ "$parent\::$name\_containee" } = sub { return $c; };
+	};
+	
 	my $self = bless(\%args, $class);
 	for my $r (@{ $self->renderers }) {
 		$r->init($self, $parent);

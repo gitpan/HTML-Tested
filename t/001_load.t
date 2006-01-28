@@ -22,13 +22,13 @@ sub render {
 	my $n = $self->name;
 	my $val = $caller->$n;
 	$val ||= 'undef';
-	$stash->{$n} = $self->{args}->[0] . " $val";
+	$stash->{$n} = $self->{args}->{param1} . " $val";
 }
 
 package T;
 use base 'HTML::Tested';
 __PACKAGE__->register_tested_widget('wn1', 'W1', 1);
-__PACKAGE__->make_tested_wn1('w', 'arg1');
+__PACKAGE__->make_tested_wn1('w', param1 => 'arg1');
 
 package main;
 $object = T->new({ w => 'a' });

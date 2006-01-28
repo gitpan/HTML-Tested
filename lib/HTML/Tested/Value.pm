@@ -5,8 +5,9 @@ package HTML::Tested::Value;
 use HTML::Entities;
 
 sub new {
-	my ($class, $parent, $name, @args) = @_;
-	return bless({ name => $name, args => \@args }, $class);
+	my ($class, $parent, $name, %args) = @_;
+	$args{default_value} = '' unless exists($args{default_value});
+	return bless({ name => $name, args => \%args }, $class);
 }
 
 sub name { return shift()->{name}; }
@@ -26,7 +27,8 @@ sub render {
 	my ($self, $caller, $stash, $id) = @_;
 	my $n = $self->name;
 	my $val = $caller->$n;
-	$val = defined($val) ? $self->encode_value($val) : '';
+	$val = defined($val) ? $self->encode_value($val) 
+				: $self->{args}->{default_value};
 	$stash->{$n} = $self->value_to_string($id, $val);
 }
 

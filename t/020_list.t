@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 20;
+use Test::More tests => 21;
 use Data::Dumper;
 use Carp;
 
@@ -37,6 +37,7 @@ is_deeply($stash, { l1 => [ { v1 => '<!-- l1__1__v1 --> a' },
 				{ v1 => '<!-- l1__2__v1 --> b' } ] }) 
 	or diag(Dumper($stash));
 is($id, 3);
+is($object->l1_containee, 'LR');
 
 my %_request_args;
 package FakeRequest;
