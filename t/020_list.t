@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 21;
+use Test::More tests => 23;
 use Data::Dumper;
 use Carp;
 
@@ -25,6 +25,11 @@ __PACKAGE__->make_tested_marked_value('v1');
 
 sub ht_id { return $id++; }
 
+sub make_test_array {
+	my $class = shift;
+	return [ map { LR->new({ v1 => $_ }) } @_ ];
+}
+
 package main;
 
 my $object = L->new({ l1 => [] });
@@ -38,6 +43,10 @@ is_deeply($stash, { l1 => [ { v1 => '<!-- l1__1__v1 --> a' },
 	or diag(Dumper($stash));
 is($id, 3);
 is($object->l1_containee, 'LR');
+
+$object->l1(undef);
+$object->l1_containee_do(qw(make_test_array a b));
+is_deeply($object->l1, [ map { LR->new({ v1 => $_ }) } qw(a b) ]);
 
 my %_request_args;
 package FakeRequest;
@@ -76,6 +85,12 @@ q#Stash $VAR1 = {
         };
 differ from expected $VAR1 = undef;
 # ]);
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+			{ l1 => [ { ht_id => 1, v1 => 'c' }, 
+					{ ht_id => 2, } ] }) ], [ 
+'Mismatch at v1: got "<!-- l1__1__v1 --> a", expected "<!-- l1__1__v1 --> c"'
+]);
 
 is_deeply([ HTML::Tested::Test->check_text(ref($object),
 			'<!-- l1__1__v1 --> a <!-- l1__2__v1 --> b',

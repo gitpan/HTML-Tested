@@ -13,6 +13,10 @@ sub new {
 	{
 		no strict 'refs';
 		*{ "$parent\::$name\_containee" } = sub { return $c; };
+		*{ "$parent\::$name\_containee_do" } = sub {
+			my ($self, $func, @args) = @_;
+			$self->$name($c->$func(@args));
+		};
 	};
 	
 	my $self = bless(\%args, $class);

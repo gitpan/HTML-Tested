@@ -48,9 +48,11 @@ sub compare_text_to_stash {
 	return @res;
 }
 
+my $_index = 0;
+
 sub Make_Expected_Class {
 	my ($target_class, $expected) = @_;
-	my $package = "$target_class\::__HT_TESTER";
+	my $package = "$target_class\::__HT_TESTER_" . $_index++;
 	{ 
 		no strict 'refs';
 		push @{ *{ "$package\::ISA" } }, $target_class 
