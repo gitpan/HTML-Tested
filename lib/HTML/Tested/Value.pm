@@ -11,6 +11,7 @@ sub new {
 }
 
 sub name { return shift()->{name}; }
+sub args { return shift()->{args}; }
 
 sub value_to_string {
 	my ($self, $name, $val) = @_;
@@ -28,7 +29,7 @@ sub render {
 	my $n = $self->name;
 	my $val = $caller->$n;
 	$val = defined($val) ? $self->encode_value($val) 
-				: $self->{args}->{default_value};
+				: $self->args->{default_value};
 	$stash->{$n} = $self->value_to_string($id, $val);
 }
 

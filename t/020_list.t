@@ -4,6 +4,7 @@ use warnings FATAL => 'all';
 use Test::More tests => 23;
 use Data::Dumper;
 use Carp;
+use HTML::Tested::Test::Request;
 
 
 BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); };
@@ -48,20 +49,10 @@ $object->l1(undef);
 $object->l1_containee_do(qw(make_test_array a b));
 is_deeply($object->l1, [ map { LR->new({ v1 => $_ }) } qw(a b) ]);
 
-my %_request_args;
-package FakeRequest;
-
-sub param {
-	my ($class, $n, $v) = @_;
-	$_request_args{$n} = $v if (defined($v));
-	return $n ? $_request_args{$n} : (keys %_request_args);
-}
-
-package main;
-
-%_request_args = (l1__2__v1 => 'b', l1__1__v1 => 'a', );
+my $req = HTML::Tested::Test::Request->new({ _param => {
+		l1__2__v1 => 'b', l1__1__v1 => 'a', } });
 my $tree ={ l1 => [ { ht_id => 1, v1 => 'a' }, { ht_id => 2, v1 => 'b' }, ] };
-my $res = L->ht_convert_request_to_tree('FakeRequest');
+my $res = L->ht_convert_request_to_tree($req);
 isa_ok($res, 'L');
 is_deeply($res, $tree) or diag(Dumper($res));
 is($res->l1->[1]->v1, 'b');
@@ -103,12 +94,11 @@ is_deeply([ HTML::Tested::Test->check_text(ref($object),
 					{ ht_id => 2, v1 => 'b' } ] }) ], [
 	'Unable to find "<!-- l1__2__v1 --> b" in "<!-- l1__1__v1 --> a b"' ]);
 
-%_request_args = ();
-HTML::Tested::Test->convert_tree_to_param(ref($object), 'FakeRequest', 
+HTML::Tested::Test->convert_tree_to_param(ref($object), $req, 
 		{ l1 => [ { ht_id => 1, v1 => 'a' }, 
 					{ ht_id => 2, v1 => 'b' } ] });
-is_deeply(\%_request_args, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
-	or diag(Dumper(\%_request_args));
+is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
+	or diag(Dumper($req));
 
 package NL;
 use base 'HTML::Tested';
@@ -157,10 +147,10 @@ __PACKAGE__->make_tested_value('ht_id');
 
 package main;
 
-%_request_args = ();
-HTML::Tested::Test->convert_tree_to_param('L2', 'FakeRequest', 
+$req = HTML::Tested::Test::Request->new;
+HTML::Tested::Test->convert_tree_to_param('L2', $req, 
 		{ l1 => [ { ht_id => 1, v1 => 'a' }, 
 					{ ht_id => 2, v1 => 'b' } ] });
-is_deeply(\%_request_args, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
-	or diag(Dumper(\%_request_args));
+is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
+	or diag(Dumper($req));
 

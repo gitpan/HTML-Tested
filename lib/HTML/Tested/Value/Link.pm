@@ -15,10 +15,10 @@ sub encode_value {
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	my $l = shift(@$val);
-	my $f = $self->{args}->{href_format};
+	my $f = $self->args->{href_format};
 	my $h = $f ? sprintf($f, @$val) : $val->[0];
 	return <<ENDS
-<a href="$h">$l</a>
+<a id="$name" href="$h">$l</a>
 ENDS
 }
 

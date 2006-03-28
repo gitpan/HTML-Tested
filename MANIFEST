@@ -10,6 +10,7 @@ lib/HTML/Tested/List/Pager.pm
 lib/HTML/Tested/Test.pm
 lib/HTML/Tested/Test/Value.pm
 lib/HTML/Tested/Test/List.pm
+lib/HTML/Tested/Test/Request.pm
 lib/HTML/Tested/Value.pm
 lib/HTML/Tested/Value/Marked.pm
 lib/HTML/Tested/Value/EditBox.pm
@@ -19,6 +20,7 @@ lib/HTML/Tested/Value/CheckBox.pm
 lib/HTML/Tested/Value/TextArea.pm
 lib/HTML/Tested/Value/Tree.pm
 lib/HTML/Tested/Value/Link.pm
+lib/HTML/Tested/Value/Upload.pm
 t/001_load.t
 t/010_value.t
 t/020_list.t
@@ -30,5 +32,6 @@ t/070_password_box.t
 t/080_dropdown.t
 t/090_checkbox.t
 t/100_link.t
+t/110_upload.t
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

@@ -18,7 +18,7 @@ is_deeply($object->v, [ 'H', 2 ]);
 my $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<a href="2">H</a>
+<a id="v" href="2">H</a>
 ENDS
 
 package T2;
@@ -32,5 +32,5 @@ $object = T2->new({ v => [ 'H', 2, 'b&' ] });
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<a href="hello?id=2&s=b&amp;">H</a>
+<a id="v" href="hello?id=2&s=b&amp;">H</a>
 ENDS

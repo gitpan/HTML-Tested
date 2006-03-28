@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.09;
+our $VERSION = 0.10;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -154,24 +154,25 @@ sub ht_convert_request_to_tree {
 		$class->ht_absorb_one_value(\%res, 
 				$r->param($p), split('__', $p));
 	}
+	for my $u ($r->upload) {
+		$class->ht_absorb_one_value(\%res, 
+				$u->filename, split('__', $u->name));
+	}
 	return bless(\%res, $class);
 }
 
 __PACKAGE__->register_tested_widget('value', 'HTML::Tested::Value');
-__PACKAGE__->register_tested_widget('marked_value', 
-		'HTML::Tested::Value::Marked');
-__PACKAGE__->register_tested_widget('edit_box', 'HTML::Tested::Value::EditBox');
-__PACKAGE__->register_tested_widget(
-		'textarea', 'HTML::Tested::Value::TextArea');
-__PACKAGE__->register_tested_widget(
-		'password_box', 'HTML::Tested::Value::PasswordBox');
-__PACKAGE__->register_tested_widget(
-		'dropdown', 'HTML::Tested::Value::DropDown');
-__PACKAGE__->register_tested_widget(
-		'checkbox', 'HTML::Tested::Value::CheckBox');
-__PACKAGE__->register_tested_widget('link', 'HTML::Tested::Value::Link');
-
 __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
+
+{
+my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
+		password_box PasswordBox dropdown DropDown checkbox CheckBox
+		link Link upload Upload);
+
+while (my ($n, $v) = each %vals) {
+	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");
+}
+}
 
 1;
 

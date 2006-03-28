@@ -1,15 +1,22 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 12;
+use Test::More tests => 15;
 use Data::Dumper;
 use Carp;
 
 BEGIN { use_ok('HTML::Tested');
 	use_ok('HTML::Tested::Test');
+	use_ok('HTML::Tested::Test::Request');
 	$SIG{__DIE__} = sub { confess(@_); };
 	$SIG{__WARN__} = sub { diag(Carp::longmess(@_)); }
 };
+
+my $r = HTML::Tested::Test::Request->new;
+$r->parse_url('/test/url?arg=1&b=c');
+is_deeply($r->_param, { arg => 1, b => 'c' });
+$r->parse_url('/test/url?arg=1&b&c=&d=');
+is_deeply($r->_param, { arg => 1, b => '', c => '', d => '' });
 
 my $object = HTML::Tested->new();
 isa_ok($object, 'HTML::Tested');
