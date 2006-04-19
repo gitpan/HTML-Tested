@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 15;
+use Test::More tests => 16;
 use Data::Dumper;
 use Carp;
 
@@ -32,14 +32,17 @@ sub render {
 	$stash->{$n} = $self->{args}->{param1} . " $val";
 }
 
+my $w_obj;
+
 package T;
 use base 'HTML::Tested';
 __PACKAGE__->register_tested_widget('wn1', 'W1', 1);
-__PACKAGE__->make_tested_wn1('w', param1 => 'arg1');
+$w_obj = __PACKAGE__->make_tested_wn1('w', param1 => 'arg1');
 
 package main;
 $object = T->new({ w => 'a' });
 is($object->w, 'a');
+isa_ok($w_obj, 'W1');
 
 my $stash = {};
 $object->ht_render($stash);

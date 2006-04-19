@@ -21,6 +21,8 @@ lib/HTML/Tested/Value/TextArea.pm
 lib/HTML/Tested/Value/Tree.pm
 lib/HTML/Tested/Value/Link.pm
 lib/HTML/Tested/Value/Upload.pm
+lib/HTML/Tested/Value/Form.pm
+lib/HTML/Tested/Value/form.js
 t/001_load.t
 t/010_value.t
 t/020_list.t
@@ -33,5 +35,7 @@ t/080_dropdown.t
 t/090_checkbox.t
 t/100_link.t
 t/110_upload.t
+t/120_form.t
+t/make_form_html.pl
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)
