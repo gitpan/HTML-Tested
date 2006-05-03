@@ -1,23 +1,13 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 11;
+use Test::More tests => 12;
 use Data::Dumper;
+use HTML::Tested::Test::Request;
 
 BEGIN { use_ok('HTML::Tested'); 
 	use_ok('HTML::Tested::Test'); 
 }
-
-my %_request_args;
-
-package FakeRequest;
-
-sub param {
-	my ($class, $n, $v) = @_;
-	$_request_args{$n} = $v if (defined($v));
-	return $n ? $_request_args{$n} : (keys %_request_args);
-}
-
 
 package T;
 use base 'HTML::Tested';
@@ -47,9 +37,9 @@ is_deeply([ HTML::Tested::Test->check_text(ref($object),
 		'This is not ok c', { mv => 'c' }) ], [
 	'Unable to find "<!-- mv --> c" in "This is not ok c"' ]);
 
-HTML::Tested::Test->convert_tree_to_param(ref($object), 'FakeRequest', 
-		{ v => 'b', mv => 'c' });
-is_deeply(\%_request_args, { v => 'b', mv => 'c' });
+my $req = HTML::Tested::Test::Request->new;
+HTML::Tested::Test->convert_tree_to_param('T', $req, { v => 'b', mv => 'c' });
+is_deeply($req->_param, { v => 'b', mv => 'c' });
 
 $object->mv(undef);
 $object->ht_render($stash);
@@ -58,4 +48,14 @@ is_deeply($stash, { v => 'b', mv => '<!-- mv --> ' }) or diag(Dumper($stash));
 $object->v(undef);
 $object->ht_render($stash);
 is_deeply($stash, { v => 'xxx', mv => '<!-- mv --> ' }) or diag(Dumper($stash));
+
+package T2;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_value('ht_id');
+
+package main;
+
+$req = HTML::Tested::Test::Request->new;
+HTML::Tested::Test->convert_tree_to_param('T2', $req, { ht_id => 5 });
+is_deeply($req->_param, { ht_id => 5});
 

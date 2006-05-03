@@ -151,6 +151,7 @@ $req = HTML::Tested::Test::Request->new;
 HTML::Tested::Test->convert_tree_to_param('L2', $req, 
 		{ l1 => [ { ht_id => 1, v1 => 'a' }, 
 					{ ht_id => 2, v1 => 'b' } ] });
-is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
+is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b'
+		, l1__2__ht_id => 2, l1__1__ht_id => 1 })
 	or diag(Dumper($req));
 

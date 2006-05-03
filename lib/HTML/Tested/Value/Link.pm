@@ -14,7 +14,7 @@ sub encode_value {
 
 sub value_to_string {
 	my ($self, $name, $val) = @_;
-	my $l = shift(@$val);
+	my $l = ($self->args->{caption} || shift(@$val));
 	my $f = $self->args->{href_format};
 	my $h = $f ? sprintf($f, @$val) : $val->[0];
 	return <<ENDS

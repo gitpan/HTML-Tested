@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.11;
+our $VERSION = 0.12;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -168,7 +168,8 @@ __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 {
 my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
 		password_box PasswordBox dropdown DropDown checkbox CheckBox
-		link Link upload Upload form Form);
+		link Link upload Upload form Form submit Submit
+		hidden Hidden);
 
 while (my ($n, $v) = each %vals) {
 	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");

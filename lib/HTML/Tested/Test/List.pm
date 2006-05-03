@@ -51,9 +51,8 @@ sub bless_from_tree {
 sub _convert_to_param {
 	my ($class, $obj_class, $r, $name, $val) = @_;
 	my $target = $obj_class->containee;
-	HTML::Tested::Test::List::Blesser->convert_tree_to_param($target, $r, $_,
-				$name . "__" . $_->{ht_id})
-		for @$val;
+	HTML::Tested::Test::List::Blesser->convert_tree_to_param($target
+			, $r, $_, $name . "__" . $_->{ht_id}) for @$val;
 }
 
 1;
