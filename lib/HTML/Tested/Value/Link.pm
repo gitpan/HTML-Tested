@@ -16,6 +16,7 @@ sub value_to_string {
 	my ($self, $name, $val) = @_;
 	my $l = ($self->args->{caption} || shift(@$val));
 	my $f = $self->args->{href_format};
+	die "Empty value in $name link" unless $val;
 	my $h = $f ? sprintf($f, @$val) : $val->[0];
 	return <<ENDS
 <a id="$name" href="$h">$l</a>
