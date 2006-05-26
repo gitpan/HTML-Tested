@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 16;
+use Test::More tests => 19;
 use Data::Dumper;
 use Carp;
 
@@ -24,12 +24,14 @@ isa_ok($object, 'HTML::Tested');
 package W1;
 use base 'HTML::Tested::Value';
 
+__PACKAGE__->make_args('param1');
+
 sub render {
 	my ($self, $caller, $stash) = @_;
 	my $n = $self->name;
 	my $val = $caller->$n;
 	$val ||= 'undef';
-	$stash->{$n} = $self->{args}->{param1} . " $val";
+	$stash->{$n} = $self->arg($caller, "param1") . " $val";
 }
 
 my $w_obj;
@@ -43,6 +45,10 @@ package main;
 $object = T->new({ w => 'a' });
 is($object->w, 'a');
 isa_ok($w_obj, 'W1');
+
+# Sometimes args are used for passing opaque values.
+# e.g. HTML::Tested::ClassDBI cdbi_bind
+is_deeply($w_obj->args, { param1 => 'arg1' });
 
 my $stash = {};
 $object->ht_render($stash);
@@ -72,3 +78,11 @@ $object->ht_render($stash);
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
 			$stash, { w => undef }) ], []);
 
+package T2;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_value('v');
+
+package main;
+
+is(T2->can("v_param1"), undef);
+isnt(T2->can("v_default_value"), undef);

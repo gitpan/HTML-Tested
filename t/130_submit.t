@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 8;
+use Test::More tests => 15;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested'); 
@@ -49,4 +49,36 @@ $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <input type="submit" name="v" id="v" value="b" />
 ENDS
+
+$object->v_is_disabled(1);
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => '' }) or diag(Dumper($stash));
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+		$stash, { v => 'HT_DISABLED' }) ], []);
+
+$object = T2->new;
+is($object->v, undef);
+
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<input type="submit" name="v" id="v" value="b" />
+ENDS
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+		$stash, { HT_NO_v => 'b' }) ], []);
+
+is_deeply([ HTML::Tested::Test->check_text(ref($object), 
+	'There is no v here', { HT_NO_v => 'b' }) ], []);
+
+is_deeply([ HTML::Tested::Test->check_text(ref($object), 
+	'There is <input type="submit" name="v" id="v" value="b" />'
+		. "\n", { HT_NO_v => 'b' }) ], [
+	'Unexpectedly found "<input type="submit" name="v" id="v" value="b"'
+		. " />\n\" in "
+		. '"There is <input type="submit" name="v" id="v" value="b"'
+		. " />\n\""
+]);
 

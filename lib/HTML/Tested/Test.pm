@@ -75,29 +75,47 @@ sub bless_unknown_widget {
 	 
 sub bless_from_tree_for_test {
 	my ($class, $target, $expected, $err) = @_;
-	my $e_class = Make_Expected_Class($target, $expected);
 	my $res = {};
+	my (@disabled, %e, @reverted);
 	while (my ($n, $v) = each %$expected) {
-		my $wc = $e_class->Widgets_Map->{$n};
-		$res->{$n} = $wc ? $wc->__ht_tester->bless_from_tree($wc, $v, $err)
-					: $class->bless_unknown_widget($n, $v, $err);
+		push @reverted, $n if ($n =~ s/^HT_NO_//);
+		$e{$n} = $v;
 	}
-	return bless($res, $e_class);
+	$expected = \%e;
+
+	my $e_class = Make_Expected_Class($target, $expected);
+	while (my ($n, $v) = each %$expected) {
+		if (defined($v) && $v eq 'HT_DISABLED') {
+			push @disabled, "$n\_is_disabled";
+			next;
+		}
+		my $wc = $e_class->Widgets_Map->{$n};
+		$res->{$n} = $wc ?
+			$wc->__ht_tester->bless_from_tree($wc, $v, $err)
+			: $class->bless_unknown_widget($n, $v, $err);
+	}
+	my $e_self = bless($res, $e_class);
+	$e_self->$_(1) for @disabled;
+	$e_self->Widgets_Map->{$_}->{__HT_REVERTED__} = 1 for @reverted;
+	return $e_self;
 }
 
 sub do_comparison {
 	my ($class, $compare, $obj_class, $stash, $expected) = @_;
 	my $e_stash = {};
 	my @res;
-	my $e_class = $class->bless_from_tree_for_test($obj_class, $expected, \@res);
-	$e_class->ht_render($e_stash);
+	my $e_self = $class->bless_from_tree_for_test($obj_class
+			, $expected, \@res);
+	$e_self->ht_render($e_stash);
 
-	push @res, $class->$compare($e_class->Widgets_Map, $stash, $e_stash);
+	push @res, $class->$compare($e_self->Widgets_Map, $stash, $e_stash);
 	return @res;
 }
 
 sub check_stash { return shift()->do_comparison('compare_stashes', @_); }
-sub check_text { return shift()->do_comparison('compare_text_to_stash', @_); }
+sub check_text {
+	return shift()->do_comparison('compare_text_to_stash', @_);
+}
 
 sub register_widget_tester {
 	my ($class, $w_class, $t_class) = @_;
@@ -127,6 +145,7 @@ sub convert_tree_to_param {
 
 __PACKAGE__->register_widget_tester('HTML::Tested::Value', 
 		'HTML::Tested::Test::Value');
-__PACKAGE__->register_widget_tester('HTML::Tested::List', 'HTML::Tested::Test::List');
+__PACKAGE__->register_widget_tester('HTML::Tested::List'
+		, 'HTML::Tested::Test::List');
 
 1;

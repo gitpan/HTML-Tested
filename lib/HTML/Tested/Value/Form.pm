@@ -41,9 +41,9 @@ sub Push_Constraints {
 }
 
 sub new {
-	my $self = shift()->SUPER::new(@_);
-	my $parent = shift;
-	my $children = $self->args->{children} || [];
+	my ($class, $parent, $name, %args) = @_;
+	my $self = $class->SUPER::new($parent, $name, %args);
+	my $children = $args{children} || [];
 	my @parsed_children;
 	while (my ($n, $type, $args) = splice(@$children , 0, 3)) {
 		my $f = "make_tested_$type";

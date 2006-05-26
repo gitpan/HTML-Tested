@@ -5,7 +5,8 @@ package HTML::Tested::Test::Value;
 
 sub _check_stash {
 	my ($class, $w_class, $n, $res, $v) = @_;
-	return ($res eq $v) ? () : HTML::Tested::Test::Stash_Mismatch($n, $res, $v);
+	return ($res eq $v) ? () : HTML::Tested::Test::Stash_Mismatch(
+					$n, $res, $v);
 };
 
 sub bless_from_tree {
@@ -15,8 +16,14 @@ sub bless_from_tree {
 
 sub _check_text {
 	my ($class, $widget, $n, $text, $v) = @_;
-	return (index($text, $v) == -1) 
-			? ("Unable to find \"$v\" in \"$text\"") : ();
+	my @ret;
+	if ($widget->{__HT_REVERTED__}) {
+		@ret = ("Unexpectedly found \"$v\" in \"$text\"")
+			if (index($text, $v) != -1);
+	} elsif (index($text, $v) == -1) {
+		@ret = ("Unable to find \"$v\" in \"$text\"");
+	}
+	return @ret;
 }
 
 sub _convert_to_param {

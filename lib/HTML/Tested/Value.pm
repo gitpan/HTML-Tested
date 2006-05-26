@@ -2,16 +2,46 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Value;
+use base 'Class::Data::Inheritable';
 use HTML::Entities;
+
+__PACKAGE__->mk_classdata('Arg_Names', []);
+
+sub make_args {
+	my ($class, @names) = @_;
+	my $an = $class->Arg_Names;
+	$class->Arg_Names([ @$an, @names ]);
+}
+
+__PACKAGE__->make_args(qw(default_value is_disabled));
+
+sub arg {
+	my ($self, $parent, $arg_name) = @_;
+	my $fname = $self->name . "_$arg_name";
+	return exists $parent->{$fname} ?
+		$parent->{$fname} : $self->{_args}->{$arg_name};
+}
+
+sub _make_arg_accessors {
+	my ($self, $parent, $arg_name) = @_;
+	my $fname = $self->name . "_$arg_name";
+	no strict 'refs';
+	*{ "$parent\::$fname" } = sub {
+		my $this = shift;
+		$this->{ $fname } = shift if @_;
+		return $self->arg($this, $arg_name);
+	};
+}
 
 sub new {
 	my ($class, $parent, $name, %args) = @_;
-	$args{default_value} = '' unless exists($args{default_value});
-	return bless({ name => $name, args => \%args }, $class);
+	my $self = bless({ name => $name, _args => \%args }, $class);
+	$self->_make_arg_accessors($parent, $_) for @{ $self->Arg_Names };
+	return $self;
 }
 
 sub name { return shift()->{name}; }
-sub args { return shift()->{args}; }
+sub args { return shift()->{_args}; }
 
 sub value_to_string {
 	my ($self, $name, $val) = @_;
@@ -26,11 +56,20 @@ sub encode_value {
 
 sub render {
 	my ($self, $caller, $stash, $id) = @_;
+	my $res = '';
 	my $n = $self->name;
+	goto OUT if $self->arg($caller, "is_disabled");
+
 	my $val = $caller->$n;
-	$val = defined($val) ? $self->encode_value($val) 
-				: $self->args->{default_value};
-	$stash->{$n} = $self->value_to_string($id, $val);
+	if (defined($val)) {
+		$val = $self->encode_value($val);
+	} else {
+		$val = $self->arg($caller, "default_value");
+		$val = '' unless defined($val);
+	}
+	$res = $self->value_to_string($id, $val, $caller);
+OUT:
+	$stash->{$n} = $res;
 }
 
 sub bless_from_tree { return $_[1]; }

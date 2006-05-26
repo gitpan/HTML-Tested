@@ -12,5 +12,6 @@ WriteMakefile(
                      'Test::Simple' => 0.44,
 		     'Class::Data::Inheritable' => '',
 		     'Class::Accessor' => '',
+		     'HTML::Entities' => '',
                     },
 );
