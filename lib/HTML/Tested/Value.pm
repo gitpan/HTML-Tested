@@ -13,7 +13,7 @@ sub make_args {
 	$class->Arg_Names([ @$an, @names ]);
 }
 
-__PACKAGE__->make_args(qw(default_value is_disabled));
+__PACKAGE__->make_args(qw(default_value is_disabled is_trusted));
 
 sub arg {
 	my ($self, $parent, $arg_name) = @_;
@@ -62,9 +62,12 @@ sub render {
 
 	my $val = $caller->$n;
 	if (defined($val)) {
-		$val = $self->encode_value($val);
+		$val = $self->encode_value($val)
+			unless $self->arg($caller, "is_trusted");
 	} else {
 		$val = $self->arg($caller, "default_value");
+		$val = $val->($self, $id, $caller)
+			if (defined($val) && ref($val) eq 'CODE');
 		$val = '' unless defined($val);
 	}
 	$res = $self->value_to_string($id, $val, $caller);

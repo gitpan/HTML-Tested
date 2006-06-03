@@ -54,9 +54,9 @@ or we can crawl our site and check the resulting text.
 As you can imagine both of those scenarios require quite a lot of effort to
 get right.
 
-HTML::Tested can help here. It does this by generating stash data from the widgets
-that you declare. Its testing code can check the existence of those widgets both in
-the stash and in the text of the page.
+HTML::Tested can help here. It does this by generating stash data from the
+widgets that you declare. Its testing code can check the existence of those
+widgets both in the stash and in the text of the page.
 
 =cut
 
@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.14;
+our $VERSION = 0.15;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -169,7 +169,7 @@ __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
 		password_box PasswordBox dropdown DropDown checkbox CheckBox
 		link Link upload Upload form Form submit Submit
-		hidden Hidden);
+		hidden Hidden radio Radio);
 
 while (my ($n, $v) = each %vals) {
 	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");

@@ -6,9 +6,7 @@ use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
 
-
-BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); };
-};
+BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); }; };
 
 BEGIN { use_ok('HTML::Tested::List'); 
 	use_ok('HTML::Tested::Test'); 

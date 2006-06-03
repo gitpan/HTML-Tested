@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 18;
+use Test::More tests => 21;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 use Carp;
@@ -92,4 +92,25 @@ $object = T3->new({ v => 'b' });
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => '' }) or diag(Dumper($stash));
+
+package T4;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_value('v', is_trusted => 1, default_value => sub {
+	my ($self, $id, $caller) = @_;
+	return $self->name . ", $id, " . ref($caller);
+});
+
+package main;
+
+$object = T4->new({ v => '&a' });
+is($object->v, '&a');
+
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => '&a' }) or diag(Dumper($stash));
+
+$object->v(undef);
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => 'v, v, T4' }) or diag(Dumper($stash));
 

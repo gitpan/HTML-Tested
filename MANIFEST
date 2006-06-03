@@ -23,6 +23,7 @@ lib/HTML/Tested/Value/Link.pm
 lib/HTML/Tested/Value/Upload.pm
 lib/HTML/Tested/Value/Submit.pm
 lib/HTML/Tested/Value/Hidden.pm
+lib/HTML/Tested/Value/Radio.pm
 lib/HTML/Tested/Value/Form.pm
 lib/HTML/Tested/Value/form.js
 t/001_load.t
@@ -40,6 +41,7 @@ t/110_upload.t
 t/120_form.t
 t/130_submit.t
 t/140_hidden.t
+t/150_radio.t
 t/make_form_html.pl
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)
