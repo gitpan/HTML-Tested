@@ -9,8 +9,10 @@ lib/HTML/Tested/List/Renderer.pm
 lib/HTML/Tested/List/Pager.pm
 lib/HTML/Tested/Test.pm
 lib/HTML/Tested/Test/Value.pm
+lib/HTML/Tested/Test/Radio.pm
 lib/HTML/Tested/Test/List.pm
 lib/HTML/Tested/Test/Request.pm
+lib/HTML/Tested/Seal.pm
 lib/HTML/Tested/Value.pm
 lib/HTML/Tested/Value/Marked.pm
 lib/HTML/Tested/Value/EditBox.pm
@@ -42,6 +44,7 @@ t/120_form.t
 t/130_submit.t
 t/140_hidden.t
 t/150_radio.t
+t/160_seal.t
 t/make_form_html.pl
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

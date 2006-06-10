@@ -12,6 +12,10 @@ sub encode_value {
 	return [ map { encode_entities($_) } @$val ];
 }
 
+sub seal_value {
+	my ($self, $val) = @_;
+	return [ map { HTML::Tested::Seal->instance->encrypt($_) } @$val ];
+}
 
 sub value_to_string {
 	my ($self, $name, $val, $caller) = @_;

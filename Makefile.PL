@@ -13,5 +13,9 @@ WriteMakefile(
 		     'Class::Data::Inheritable' => '',
 		     'Class::Accessor' => '',
 		     'HTML::Entities' => '',
+		     'Class::Singleton' => '',
+		     'Crypt::CBC' => '',
+		     'Crypt::Blowfish' => '',
+		     'Digest::CRC' => '',
                     },
 );

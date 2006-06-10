@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.15;
+our $VERSION = 0.16;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -132,13 +132,8 @@ sub ht_bless_from_tree {
 sub ht_absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
 	my $p = shift(@path) or return;
-	if (@path) {
-		my $wc = $self->Widgets_Map->{$p} or return;
-		my $ab = $wc->can('absorb_one_value') or return;
-		$root->{$p} = $ab->($wc, $root->{$p}, $val, @path);
-	} else {
-		$root->{$p} = $val;
-	}
+	my $wc = $self->Widgets_Map->{$p} or return;
+	$wc->absorb_one_value($root, $val, @path);
 }
 
 =head2 ht_convert_request_to_tree(class, r)

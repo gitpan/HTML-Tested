@@ -37,7 +37,8 @@ sub render {
 }
 
 sub containee {
-	my $res = shift()->{containee} or confess "No containee argument given";
+	my $res = shift()->{containee}
+		or confess "No containee argument given";
 	return $res;
 }
 
@@ -48,7 +49,8 @@ sub bless_from_tree {
 }
 
 sub absorb_one_value {
-	my ($self, $arr, $val, @path) = @_;
+	my ($self, $root, $val, @path) = @_;
+	my $arr = $root->{ $self->name };
 	my $id = shift(@path) or return;
 	my $c = bless({ ht_id => $id }, $self->containee);
 	if ($arr) {
@@ -58,8 +60,9 @@ sub absorb_one_value {
 	} else {
 		$arr = [ $c ];
 	}
-	$self->containee->ht_absorb_one_value($arr->[ @$arr - 1 ], $val, @path);
-	return $arr;
+	$self->containee->ht_absorb_one_value($arr->[ @$arr - 1 ]
+						, $val, @path);
+	$root->{ $self->name } = $arr;
 }
 
 1;

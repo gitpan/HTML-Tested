@@ -12,8 +12,21 @@ sub Stash_Mismatch {
 				defined($v) ? "\"$v\"" : "undef");
 }
 
+sub Ensure_Value_To_Check {
+	my ($r_stash, $name, $e_val, $errs) = @_;
+	my $r_val = $r_stash->{$name};
+	return if (!defined($r_val) && !defined($e_val));
+
+	if (defined($r_val) xor defined($e_val)) {
+		push @$errs, Stash_Mismatch($name, $r_val, $e_val);
+		return;
+	}
+	return $r_val;
+}
+
 sub compare_stashes {
-	my ($class, $widgets_map, $stash, $e_stash) = @_;
+	my ($class, $e_self, $stash, $e_stash) = @_;
+	my $widgets_map = $e_self->Widgets_Map;
 	return () if (!defined($stash) && !defined($e_stash));
 	if (defined($stash) xor defined($e_stash)) {
 		return ("Stash " . Dumper($stash)
@@ -21,31 +34,24 @@ sub compare_stashes {
 				. "expected " . Dumper($e_stash));
 	}
 
+	return $class->_run_checks('stash', $e_self, $stash, $e_stash);
+}
+
+sub _run_checks {
+	my ($class, $check, $e_self, $something, $e_stash) = @_;
+	my $widgets_map = $e_self->Widgets_Map;
+	my $f = "check_$check";
 	my @res;
-	while (my ($n, $v) = each %$e_stash) {
-		my $w = $widgets_map->{$n};
-
-		my $res = $stash->{$n};
-		next if (!defined($res) && !defined($v));
-
-		if (defined($res) xor defined($v)) {
-			push @res, Stash_Mismatch($n, $res, $v);
-		} elsif (my @errors = $w->__ht_tester->_check_stash(
-						$w, $n, $res, $v)) {
-			push @res, @errors;
-		}
+	while (my ($n, $w) = each %$widgets_map) {
+		push @res, $w->__ht_tester->$f(
+				$w, $e_stash, $something, $n, $e_self);
 	}
 	return @res;
 }
 
 sub compare_text_to_stash {
-	my ($class, $widgets_map, $text, $e_stash) = @_;
-	my @res;
-	while (my ($n, $v) = each %$e_stash) {
-		my $w = $widgets_map->{$n};
-		push @res, $w->__ht_tester->_check_text($w, $n, $text, $v);
-	}
-	return @res;
+	my ($class, $e_self, $text, $e_stash) = @_;
+	return $class->_run_checks('text', $e_self, $text, $e_stash);
 }
 
 my $_index = 0;
@@ -108,7 +114,7 @@ sub do_comparison {
 			, $expected, \@res);
 	$e_self->ht_render($e_stash);
 
-	push @res, $class->$compare($e_self->Widgets_Map, $stash, $e_stash);
+	push @res, $class->$compare($e_self, $stash, $e_stash);
 	return @res;
 }
 
@@ -136,7 +142,8 @@ sub convert_tree_to_param {
 		my $wc = $obj_class->Widgets_Map->{$n};
 		if ($wc) {
 			$wc->__ht_tester->_convert_to_param($wc, $r, 
-				$parent_name ? $parent_name . "__$n" : $n, $v);
+				$parent_name ? $parent_name . "__$n" : $n
+				, $v);
 		} else {
 			$class->_tree_to_param_fallback($n);
 		}
@@ -145,6 +152,8 @@ sub convert_tree_to_param {
 
 __PACKAGE__->register_widget_tester('HTML::Tested::Value', 
 		'HTML::Tested::Test::Value');
+__PACKAGE__->register_widget_tester('HTML::Tested::Value::Radio', 
+		'HTML::Tested::Test::Radio');
 __PACKAGE__->register_widget_tester('HTML::Tested::List'
 		, 'HTML::Tested::Test::List');
 

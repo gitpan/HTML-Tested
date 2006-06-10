@@ -18,23 +18,33 @@ sub _tree_to_param_fallback {
 
 package HTML::Tested::Test::List;
 
-sub _check_stash {
-	my ($class, $w_class, $n, $res, $expected) = @_;
+sub check_stash {
+	my ($class, $widget, $e_stash, $r_stash, $name) = @_;
 	my @err;
-	for (my $i = 0; $i < @$res || $i < @$expected; $i++) {
+	goto OUT unless exists($e_stash->{$name});
+
+	my $e_arr = $e_stash->{$name};
+	my $r_arr = HTML::Tested::Test::Ensure_Value_To_Check(
+			$r_stash, $name, $e_arr, \@err);
+	goto OUT unless defined($r_arr);
+
+	for (my $i = 0; $i < @$r_arr || $i < @$e_arr; $i++) {
 		push @err, HTML::Tested::Test->compare_stashes(
-				$w_class->containee->Widgets_Map, 
-				$res->[$i], $expected->[$i]);
+				$widget->containee, 
+				$r_arr->[$i], $e_arr->[$i]);
 	}
+OUT:
 	return @err;
 };
 
-sub _check_text {
-	my ($class, $w_class, $n, $text, $expected) = @_;
+sub check_text {
+	my ($class, $widget, $e_stash, $text, $name) = @_;
+	return () unless exists $e_stash->{$name};
+	my $expected = $e_stash->{$name};
 	my @err;
 	for (my $i = 0; $i < @$expected; $i++) {
 		push @err, HTML::Tested::Test->compare_text_to_stash(
-				$w_class->containee->Widgets_Map, 
+				$widget->containee, 
 				$text, $expected->[$i]);
 	}
 	return @err;
