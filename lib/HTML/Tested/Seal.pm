@@ -5,12 +5,14 @@ package HTML::Tested::Seal;
 use base 'Class::Singleton';
 use Crypt::CBC;
 use Digest::CRC qw(crc32);
+use Carp;
 
 sub _new_instance {
 	my ($class, $key) = @_;
 	my $self = bless({}, $class);
+	confess "No key!" unless $key;
 	my $c = Crypt::CBC->new({ key => $key, cipher => 'Blowfish' });
-	die "No cipher!" unless $c;
+	confess "No cipher!" unless $c;
 	$self->{_cipher} = $c;
 	return $self;
 }

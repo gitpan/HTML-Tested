@@ -25,8 +25,7 @@ sub Ensure_Value_To_Check {
 }
 
 sub compare_stashes {
-	my ($class, $e_self, $stash, $e_stash) = @_;
-	my $widgets_map = $e_self->Widgets_Map;
+	my ($class, $e_root, $stash, $e_stash) = @_;
 	return () if (!defined($stash) && !defined($e_stash));
 	if (defined($stash) xor defined($e_stash)) {
 		return ("Stash " . Dumper($stash)
@@ -34,24 +33,24 @@ sub compare_stashes {
 				. "expected " . Dumper($e_stash));
 	}
 
-	return $class->_run_checks('stash', $e_self, $stash, $e_stash);
+	my $widgets_map = $e_root->Widgets_Map;
+	return $class->_run_checks('stash', $e_root, $stash, $e_stash);
 }
 
 sub _run_checks {
-	my ($class, $check, $e_self, $something, $e_stash) = @_;
-	my $widgets_map = $e_self->Widgets_Map;
+	my ($class, $check, $e_root, $res, $e_stash) = @_;
+	my $widgets_map = $e_root->Widgets_Map;
 	my $f = "check_$check";
 	my @res;
 	while (my ($n, $w) = each %$widgets_map) {
-		push @res, $w->__ht_tester->$f(
-				$w, $e_stash, $something, $n, $e_self);
+		push @res, $w->__ht_tester->$f($e_root, $n, $e_stash, $res);
 	}
 	return @res;
 }
 
 sub compare_text_to_stash {
-	my ($class, $e_self, $text, $e_stash) = @_;
-	return $class->_run_checks('text', $e_self, $text, $e_stash);
+	my ($class, $e_root, $text, $e_stash) = @_;
+	return $class->_run_checks('text', $e_root, $text, $e_stash);
 }
 
 my $_index = 0;
@@ -82,9 +81,10 @@ sub bless_unknown_widget {
 sub bless_from_tree_for_test {
 	my ($class, $target, $expected, $err) = @_;
 	my $res = {};
-	my (@disabled, %e, @reverted);
+	my (@disabled, %e, @reverted, @sealed);
 	while (my ($n, $v) = each %$expected) {
 		push @reverted, $n if ($n =~ s/^HT_NO_//);
+		push @sealed, $n if ($n =~ s/^HT_SEALED_//);
 		$e{$n} = $v;
 	}
 	$expected = \%e;
@@ -92,7 +92,7 @@ sub bless_from_tree_for_test {
 	my $e_class = Make_Expected_Class($target, $expected);
 	while (my ($n, $v) = each %$expected) {
 		if (defined($v) && $v eq 'HT_DISABLED') {
-			push @disabled, "$n\_is_disabled";
+			push @disabled, $n;
 			next;
 		}
 		my $wc = $e_class->Widgets_Map->{$n};
@@ -100,21 +100,22 @@ sub bless_from_tree_for_test {
 			$wc->__ht_tester->bless_from_tree($wc, $v, $err)
 			: $class->bless_unknown_widget($n, $v, $err);
 	}
-	my $e_self = bless($res, $e_class);
-	$e_self->$_(1) for @disabled;
-	$e_self->Widgets_Map->{$_}->{__HT_REVERTED__} = 1 for @reverted;
-	return $e_self;
+	my $e_root = bless($res, $e_class);
+	$e_root->ht_set_widget_option($_, "is_disabled", 1) for @disabled;
+	$e_root->{"__HT_REVERTED__$_"} = 1 for @reverted;
+	$e_root->{"__HT_SEALED__$_"} = 1 for @sealed;
+	return $e_root;
 }
 
 sub do_comparison {
 	my ($class, $compare, $obj_class, $stash, $expected) = @_;
 	my $e_stash = {};
 	my @res;
-	my $e_self = $class->bless_from_tree_for_test($obj_class
+	my $e_root = $class->bless_from_tree_for_test($obj_class
 			, $expected, \@res);
-	$e_self->ht_render($e_stash);
+	$e_root->ht_render($e_stash);
 
-	push @res, $class->$compare($e_self, $stash, $e_stash);
+	push @res, $class->$compare($e_root, $stash, $e_stash);
 	return @res;
 }
 
@@ -139,6 +140,8 @@ sub _tree_to_param_fallback {
 sub convert_tree_to_param {
 	my ($class, $obj_class, $r, $tree, $parent_name) = @_;
 	while (my ($n, $v) = each %$tree) {
+		$v = HTML::Tested::Seal->instance->encrypt($v)
+			if ($n =~ s/^HT_SEALED_//);
 		my $wc = $obj_class->Widgets_Map->{$n};
 		if ($wc) {
 			$wc->__ht_tester->_convert_to_param($wc, $r, 

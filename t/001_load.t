@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 19;
+use Test::More tests => 22;
 use Data::Dumper;
 use Carp;
 
@@ -17,6 +17,7 @@ $r->parse_url('/test/url?arg=1&b=c');
 is_deeply($r->_param, { arg => 1, b => 'c' });
 $r->parse_url('/test/url?arg=1&b&c=&d=');
 is_deeply($r->_param, { arg => 1, b => '', c => '', d => '' });
+like($r->as_string, qr/arg/);
 
 my $object = HTML::Tested->new();
 isa_ok($object, 'HTML::Tested');
@@ -24,14 +25,12 @@ isa_ok($object, 'HTML::Tested');
 package W1;
 use base 'HTML::Tested::Value';
 
-__PACKAGE__->make_args('param1');
-
 sub render {
 	my ($self, $caller, $stash) = @_;
 	my $n = $self->name;
 	my $val = $caller->$n;
 	$val ||= 'undef';
-	$stash->{$n} = $self->arg($caller, "param1") . " $val";
+	$stash->{$n} = $caller->ht_get_widget_option($n, "param1") . " $val";
 }
 
 my $w_obj;
@@ -46,9 +45,9 @@ $object = T->new({ w => 'a' });
 is($object->w, 'a');
 isa_ok($w_obj, 'W1');
 
-# Sometimes args are used for passing opaque values.
+# Sometimes options are used for passing opaque values.
 # e.g. HTML::Tested::ClassDBI cdbi_bind
-is_deeply($w_obj->args, { param1 => 'arg1' });
+is_deeply($w_obj->options, { param1 => 'arg1' });
 
 my $stash = {};
 $object->ht_render($stash);
@@ -85,4 +84,21 @@ __PACKAGE__->make_tested_value('v');
 package main;
 
 is(T2->can("v_param1"), undef);
-isnt(T2->can("v_default_value"), undef);
+is(T2->can("v_default_value"), undef);
+
+package T3;
+use base 'T2';
+__PACKAGE__->make_tested_value('t3');
+
+package main;
+
+$object = T3->new({ v => 1, t3 => 2 });
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => 1, t3 => 2 });
+
+$object = T2->new({ v => 1, t3 => 2 });
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => 1 });
+

@@ -14,13 +14,28 @@ sub _replace_sealed {
 	while ($val =~ /($_seal_prefix\w+)/g) {
 		my $found = $1;
 		my $r = HTML::Tested::Seal->instance->decrypt($found);
+		$r = 'ENCRYPTED' unless defined($r);
 		$val =~ s/$found/$r/;
 	}
 	return $val;
 }
 
+sub _handle_sealed {
+	my ($class, $e_root, $name, $e_val, $r_val, $err) = @_;
+	if ($e_root->{"__HT_SEALED__$name"}) {
+		my $orig_e_val = $e_val;
+		$e_val = $class->_replace_sealed($e_val);
+		$r_val = $class->_replace_sealed($r_val);
+
+		push @$err, "$name wasn't sealed" if ($orig_e_val eq $e_val);
+	} elsif ($e_root->ht_get_widget_option($name, "is_sealed")) {
+		push @$err, "HT_SEALED was not defined on $name";
+	}
+	return ($e_val, $r_val);
+}
+
 sub check_stash {
-	my ($class, $widget, $e_stash, $r_stash, $name) = @_;
+	my ($class, $e_root, $name, $e_stash, $r_stash) = @_;
 	my @err;
 	goto OUT unless exists($e_stash->{$name});
 
@@ -29,11 +44,8 @@ sub check_stash {
 			$r_stash, $name, $e_val, \@err);
 	goto OUT unless defined($r_val);
 
-	if ($widget->arg(undef, "is_sealed")) {
-		$e_val = $class->_replace_sealed($e_val);
-		$r_val = $class->_replace_sealed($r_val);
-	}
-
+	($e_val, $r_val) = $class->_handle_sealed($e_root, $name
+					, $e_val, $r_val, \@err);
 	goto OUT if ($r_val eq $e_val);
 
 	@err = HTML::Tested::Test::Stash_Mismatch($name, $r_val, $e_val);
@@ -47,15 +59,12 @@ sub bless_from_tree {
 }
 
 sub _check_text_i {
-	my ($class, $widget, $text, $v) = @_;
-	if ($widget->arg(undef, "is_sealed")) {
-		$text = $class->_replace_sealed($text)
-			unless index($text, $_seal_prefix) == -1;
-		$v = $class->_replace_sealed($v);
-	}
-
+	my ($class, $e_root, $name, $v, $text) = @_;
 	my @ret;
-	if ($widget->{__HT_REVERTED__}) {
+	($v, $text) = $class->_handle_sealed($e_root, $name, $v
+					     , $text, \@ret);
+
+	if ($e_root->{"__HT_REVERTED__$name"}) {
 		@ret = ("Unexpectedly found \"$v\" in \"$text\"")
 			if (index($text, $v) != -1);
 	} elsif (index($text, $v) == -1) {
@@ -65,9 +74,9 @@ sub _check_text_i {
 }
 
 sub check_text {
-	my ($class, $widget, $e_stash, $text, $name) = @_;
-	return () unless exists $e_stash->{$name};
-	return $class->_check_text_i($widget, $text, $e_stash->{$name});
+	my ($class, $e_root, $name, $e_stash, $text) = @_;
+	return $class->_check_text_i($e_root, $name,
+			, $e_stash->{$name}, $text);
 }
 
 sub _convert_to_param {

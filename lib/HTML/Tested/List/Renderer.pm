@@ -10,10 +10,10 @@ sub render {
 	my $n = $the_list->name;
 	my $rows = $caller->$n;
 	my @res;
+	my $i = 1;
 	for my $row (@$rows) {
 		my $s = {};
-		my $h = defined($row->{ht_id}) ? $row->{ht_id} : $row->ht_id;
-		$row->ht_render($s, $id . "__$h");
+		$row->ht_render($s, $id . "__" . $i++);
 		push @res, $s;
 	}
 	$stash->{$n} = \@res;

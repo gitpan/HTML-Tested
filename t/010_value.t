@@ -1,14 +1,12 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 21;
+use Test::More tests => 26;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
-use Carp;
 
 BEGIN { use_ok('HTML::Tested'); 
 	use_ok('HTML::Tested::Test'); 
-	$SIG{__DIE__} = sub { diag(Carp::longmess(@_)); };
 }
 
 package T;
@@ -78,9 +76,15 @@ $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => '' }) or diag(Dumper($stash));
 
-is($object->v_is_disabled, 1);
-$object->v_is_disabled(undef);
-is($object->v_is_disabled, undef);
+is($object->ht_get_widget_option("v", "is_disabled"), 1);
+$object->ht_set_widget_option("v", "is_disabled", undef);
+is($object->ht_get_widget_option("v", "is_disabled"), undef);
+
+eval { $object->ht_get_widget_option("fff", "is_disabled"); };
+like($@, qr/Unknown widget fff/);
+
+eval { $object->ht_set_widget_option("fff", "is_disabled", 1); };
+like($@, qr/Unknown widget fff/);
 
 $stash = {};
 $object->ht_render($stash);
@@ -88,10 +92,17 @@ is_deeply($stash, { v => 'b' }) or diag(Dumper($stash));
 
 
 $object = T3->new({ v => 'b' });
-
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => '' }) or diag(Dumper($stash));
+
+is(T3->ht_get_widget_option("v", "is_disabled"), 1);
+T3->ht_set_widget_option("v", "is_disabled", undef);
+$object = T3->new({ v => 'b' });
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => 'b' }) or diag(Dumper($stash));
+is($object->ht_get_widget_option("v", "is_disabled"), undef);
 
 package T4;
 use base 'HTML::Tested';

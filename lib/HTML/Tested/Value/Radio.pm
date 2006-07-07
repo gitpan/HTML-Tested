@@ -8,11 +8,14 @@ sub render {
 	my ($self, $caller, $stash, $id) = @_;
 	my $n = $self->name;
 	my $val = $self->get_value($caller, $id) or return;
-	for my $opt (@$val) {
+	for my $v (@$val) {
 		my $ch = '';
-		if (ref($opt) eq 'ARRAY') {
-			$ch = 'checked ' if $opt->[1];
-			$opt = $opt->[0];
+		my $opt;
+		if (ref($v) eq 'ARRAY') {
+			$ch = 'checked ' if $v->[1];
+			$opt = $v->[0];
+		} else {
+			$opt = $v;
 		}
 		$stash->{"$n\_$opt"} = <<ENDS
 <input type="radio" name="$id" id="$n" value="$opt" $ch/>

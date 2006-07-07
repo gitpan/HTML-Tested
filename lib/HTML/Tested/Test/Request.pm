@@ -7,6 +7,8 @@ __PACKAGE__->mk_accessors(qw(name filename));
 
 package HTML::Tested::Test::Request;
 use base 'Class::Accessor';
+use HTML::Tested::Seal;
+use Data::Dumper;
 
 __PACKAGE__->mk_accessors(qw(_param _pnotes _uploads));
 
@@ -26,12 +28,24 @@ sub dir_config {
 	return '';
 }
 
+sub set_params {
+	my ($self, $p) = @_;
+	while (my ($n, $v) = each %$p) {
+		$v = HTML::Tested::Seal->instance->encrypt($v)
+				if ($n =~ s/^HT_SEALED_//);
+		$self->param($n, $v);
+	}
+}
+
 sub parse_url {
 	my ($self, $url) = @_;
 	my ($arg_str) = ($url =~ /\?(.+)/);
 	return unless $arg_str;
 	my @nvs = split('&', $arg_str);
-	my %res = map { my @a = split('=', $_); ($a[0], ($a[1] || '')); } @nvs;
+	my %res = map {
+		my @a = split('=', $_);
+		($a[0], ($a[1] || ''));
+	} @nvs;
 	$self->_param(\%res);
 }
 
@@ -50,6 +64,10 @@ sub upload {
 				name => $n, filename => $v });
 	}
 	return @res;
+}
+
+sub as_string {
+	return Dumper(shift());
 }
 
 1;

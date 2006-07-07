@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.16;
+our $VERSION = 0.17;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 
@@ -91,7 +91,9 @@ sub register_tested_widget {
 			eval "use $widget_class";
 			confess "Error using $widget_class: $@" if $@;
 		}
-		$class1->Widgets_Map({}) unless $class1->Widgets_Map;
+		# to avoid inheritance troubles...
+		my %wm = %{ $class1->Widgets_Map || {} };
+		$class1->Widgets_Map(\%wm);
 		$class1->mk_accessors($name);
 		my $res = $widget_class->new($class1, $name, @args);
 		$class1->Widgets_Map->{$name} = $res;
@@ -155,6 +157,28 @@ sub ht_convert_request_to_tree {
 				$u->filename, split('__', $u->name));
 	}
 	return bless(\%res, $class);
+}
+
+sub ht_get_widget_option {
+	my ($self, $wname, $opname) = @_;
+	my $w = $self->Widgets_Map->{$wname}
+		or confess "Unknown widget $wname";
+	if (ref($self)) {
+		my $n = "__ht__$wname\_$opname";
+		return $self->{$n} if exists $self->{$n};
+	}
+	return $w->options->{$opname};
+}
+
+sub ht_set_widget_option {
+	my ($self, $wname, $opname, $val) = @_;
+	my $w = $self->Widgets_Map->{$wname}
+		or confess "Unknown widget $wname";
+	if (ref($self)) {
+		$self->{"__ht__$wname\_$opname"} = $val;
+	} else {
+		$w->options->{$opname} = $val;
+	}
 }
 
 __PACKAGE__->register_tested_widget('value', 'HTML::Tested::Value');

@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 23;
+use Test::More tests => 22;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -12,8 +12,6 @@ BEGIN { use_ok('HTML::Tested::List');
 	use_ok('HTML::Tested::Test'); 
 }
 
-my $id = 1;
-
 package L;
 use base 'HTML::Tested';
 __PACKAGE__->make_tested_list('l1', 'LR');
@@ -21,8 +19,6 @@ __PACKAGE__->make_tested_list('l1', 'LR');
 package LR;
 use base 'HTML::Tested';
 __PACKAGE__->make_tested_marked_value('v1');
-
-sub ht_id { return $id++; }
 
 sub make_test_array {
 	my $class = shift;
@@ -40,7 +36,6 @@ $object->ht_render($stash);
 is_deeply($stash, { l1 => [ { v1 => '<!-- l1__1__v1 --> a' }, 
 				{ v1 => '<!-- l1__2__v1 --> b' } ] }) 
 	or diag(Dumper($stash));
-is($id, 3);
 is($object->l1_containee, 'LR');
 
 $object->l1(undef);
@@ -49,26 +44,26 @@ is_deeply($object->l1, [ map { LR->new({ v1 => $_ }) } qw(a b) ]);
 
 my $req = HTML::Tested::Test::Request->new({ _param => {
 		l1__2__v1 => 'b', l1__1__v1 => 'a', } });
-my $tree ={ l1 => [ { ht_id => 1, v1 => 'a' }, { ht_id => 2, v1 => 'b' }, ] };
+my $tree ={ l1 => [ { v1 => 'a' }, { v1 => 'b' }, ] };
 my $res = L->ht_convert_request_to_tree($req);
 isa_ok($res, 'L');
 is_deeply($res, $tree) or diag(Dumper($res));
 is($res->l1->[1]->v1, 'b');
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-			{ l1 => [ { ht_id => 1, v1 => 'a' }, 
-					{ ht_id => 2, v1 => 'b' } ] }) ], []);
+		{ l1 => [ { v1 => 'a' }, 
+				{ v1 => 'b' } ] }) ], []);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-			{ l1 => [ { ht_id => 1 }, { ht_id => 2 } ] }) ], []);
+			{ l1 => [ { }, { } ] }) ], []);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-			{ l1 => [ { ht_id => 1, xxxx => 'ddd' }, 
-					{ ht_id => 2 } ] }) ], [
+			{ l1 => [ { xxxx => 'ddd' }, 
+					{ } ] }) ], [
 		'Unknown widget xxxx found in expected!' ]);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-			{ l1 => [ { ht_id => 1 }, ] }) ], [
+			{ l1 => [ { }, ] }) ], [
 q#Stash $VAR1 = {
           'v1' => '<!-- l1__2__v1 --> b'
         };
@@ -76,24 +71,24 @@ differ from expected $VAR1 = undef;
 # ]);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-			{ l1 => [ { ht_id => 1, v1 => 'c' }, 
-					{ ht_id => 2, } ] }) ], [ 
+			{ l1 => [ { v1 => 'c' }, 
+					{ } ] }) ], [ 
 'Mismatch at v1: got "<!-- l1__1__v1 --> a", expected "<!-- l1__1__v1 --> c"'
 ]);
 
 is_deeply([ HTML::Tested::Test->check_text(ref($object),
 			'<!-- l1__1__v1 --> a <!-- l1__2__v1 --> b',
-			{ l1 => [ { ht_id => 1, v1 => 'a' }, 
-					{ ht_id => 2, v1 => 'b' } ] }) ], []);
+			{ l1 => [ { v1 => 'a' }, 
+					{ v1 => 'b' } ] }) ], []);
 
 is_deeply([ HTML::Tested::Test->check_text(ref($object),
 			'<!-- l1__1__v1 --> a b',
-			{ l1 => [ { ht_id => 1, v1 => 'a' }, 
-					{ ht_id => 2, v1 => 'b' } ] }) ], [
+			{ l1 => [ { v1 => 'a' }, 
+					{ v1 => 'b' } ] }) ], [
 	'Unable to find "<!-- l1__2__v1 --> b" in "<!-- l1__1__v1 --> a b"' ]);
 
 HTML::Tested::Test->convert_tree_to_param(ref($object), $req, 
-		{ l1 => [ 1 => { v1 => 'a' }, 2 => { v1 => 'b' } ] });
+		{ l1 => [ { v1 => 'a' }, { v1 => 'b' } ] });
 is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
 	or diag(Dumper($req));
 
@@ -105,8 +100,6 @@ package NLR;
 use base 'HTML::Tested';
 __PACKAGE__->make_tested_list('l2', 'LR');
 
-sub ht_id { return $id++; }
-
 package main;
 
 my $nested = NL->new({ l1 => [ map { NLR->new({ l2 => [ 
@@ -115,20 +108,18 @@ my $nested = NL->new({ l1 => [ map { NLR->new({ l2 => [
 $stash = {};
 $nested->ht_render($stash);
 is_deeply($stash, { l1 => [ { 
-	l2 => [ { v1 => '<!-- l1__3__l2__4__v1 --> a' }, 
-				{ v1 => '<!-- l1__3__l2__5__v1 --> b' } ],
+	l2 => [ { v1 => '<!-- l1__1__l2__1__v1 --> a' }, 
+				{ v1 => '<!-- l1__1__l2__2__v1 --> b' } ],
 }, {
-	l2 => [ { v1 => '<!-- l1__6__l2__7__v1 --> a' }, 
-				{ v1 => '<!-- l1__6__l2__8__v1 --> b' } ],
+	l2 => [ { v1 => '<!-- l1__2__l2__1__v1 --> a' }, 
+				{ v1 => '<!-- l1__2__l2__2__v1 --> b' } ],
 } ] }) 
 	or diag(Dumper($stash));
-is($id, 9);
-
 my $blessed = NL->ht_bless_from_tree({
-	l1 => [ { ht_id => 3, l2 => [ { ht_id => 4, v1 => 'a' }, 
-					{ ht_id => 5, v1 => 'a' } ] },
-		{ ht_id => 6, l2 => [ { ht_id => 7, v1 => 'b' }, 
-					{ ht_id => 8, v1 => 'b' } ] }
+	l1 => [ { l2 => [ { v1 => 'a' }, 
+					{ v1 => 'a' } ] },
+		{ l2 => [ { v1 => 'b' }, 
+					{ v1 => 'b' } ] }
 	] });
 is(@{ $blessed->l1 }, 2);
 is(@{ $blessed->l1->[1]->l2 }, 2);
@@ -146,9 +137,12 @@ package main;
 
 $req = HTML::Tested::Test::Request->new;
 HTML::Tested::Test->convert_tree_to_param('L2', $req, 
-		{ l1 => [ 1 => { ht_id => 1, v1 => 'a' }, 
-				2 => { ht_id => 2, v1 => 'b' } ] });
+		{ l1 => [ { ht_id => 1, v1 => 'a' }, 
+				{ ht_id => 2, v1 => 'b' } ] });
 is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b'
 		, l1__2__ht_id => 2, l1__1__ht_id => 1 })
 	or diag(Dumper($req));
 
+$res = L2->ht_convert_request_to_tree($req);
+$tree ={ l1 => [ { v1 => 'a', ht_id => 1 }, { ht_id => 2, v1 => 'b' }, ] };
+is_deeply($res, $tree) or diag(Dumper($res));

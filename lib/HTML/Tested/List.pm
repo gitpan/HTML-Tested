@@ -52,9 +52,9 @@ sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
 	my $arr = $root->{ $self->name };
 	my $id = shift(@path) or return;
-	my $c = bless({ ht_id => $id }, $self->containee);
+	my $c = bless({}, $self->containee);
 	if ($arr) {
-		if ($arr->[ @$arr - 1 ]->{ht_id} ne $id) {
+		if (@$arr != $id) {
 			push @$arr, $c;
 		}
 	} else {
