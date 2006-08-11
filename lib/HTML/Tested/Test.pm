@@ -155,6 +155,8 @@ sub convert_tree_to_param {
 
 __PACKAGE__->register_widget_tester('HTML::Tested::Value', 
 		'HTML::Tested::Test::Value');
+__PACKAGE__->register_widget_tester('HTML::Tested::Value::Upload', 
+		'HTML::Tested::Test::Upload');
 __PACKAGE__->register_widget_tester('HTML::Tested::Value::Radio', 
 		'HTML::Tested::Test::Radio');
 __PACKAGE__->register_widget_tester('HTML::Tested::List'

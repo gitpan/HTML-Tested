@@ -3,13 +3,15 @@ use warnings FATAL => 'all';
 
 package HTML::Tested::List;
 use HTML::Tested::List::Renderer;
+use HTML::Tested::List::Table;
 use Carp;
 
 sub new {
 	my ($class, $parent, $name, $c, %args) = @_;
 	$args{containee} ||= $c;
 	$args{name} ||= $name;
-	$args{renderers} ||= [ 'HTML::Tested::List::Renderer' ];
+	$args{renderers} ||= [ 'HTML::Tested::List::Renderer'
+		, 'HTML::Tested::List::Table' ];
 	{
 		no strict 'refs';
 		*{ "$parent\::$name\_containee" } = sub { return $c; };
@@ -28,6 +30,7 @@ sub new {
 
 sub name { return shift()->{name}; }
 sub renderers { return shift()->{renderers}; }
+sub options { return {}; }
 
 sub render {
 	my ($self, $caller, $stash, $id) = @_;

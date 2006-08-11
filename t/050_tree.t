@@ -1,10 +1,16 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 4;
+use Test::More tests => 13;
 use Data::Dumper;
+use Carp;
 
-BEGIN { use_ok('HTML::Tested::Value::Tree'); }
+BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); }; };
+
+BEGIN { use_ok('HTML::Tested::Value::Tree');
+	use_ok('HTML::Tested');
+	use_ok('HTML::Tested::Test');
+};
 
 use constant INPUT_TREE => [ {
 	value => 'a',
@@ -23,7 +29,8 @@ use constant INPUT_TREE => [ {
 	value => 'e',
 } ];
 
-is(HTML::Tested::Value::Tree->value_to_string('name', { input_tree => INPUT_TREE,
+is(HTML::Tested::Value::Tree->value_to_string('name'
+			, { input_tree => INPUT_TREE,
 collapsed_format => '%value%', selected_format => '%value% 1',
 selection_attribute => "value", selection_tree => {
 	a => { c => { f => 1 } },
@@ -51,7 +58,8 @@ selection_attribute => "value", selection_tree => {
 </ul>
 ENDS
 
-is(HTML::Tested::Value::Tree->value_to_string('name', { input_tree => INPUT_TREE,
+is(HTML::Tested::Value::Tree->value_to_string('name'
+			, { input_tree => INPUT_TREE,
 selection_attribute => "value", selection_tree => {
 	a => { c => { f => 1 } },
 } }), <<ENDS);
@@ -78,7 +86,8 @@ selection_attribute => "value", selection_tree => {
 </ul>
 ENDS
 
-is(HTML::Tested::Value::Tree->value_to_string('name', { input_tree => INPUT_TREE,
+is(HTML::Tested::Value::Tree->value_to_string('name'
+			, { input_tree => INPUT_TREE,
 selection_attribute => "value", selections => [ 'e', 'f' ], }), <<ENDS);
 <ul>
   <li>
@@ -102,3 +111,78 @@ selection_attribute => "value", selections => [ 'e', 'f' ], }), <<ENDS);
   </li>
 </ul>
 ENDS
+
+package T;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_tree('v'
+, collapsed_format => '<a href="%href%">%label%</a>'
+, selected_format => '<span class="selected">%label%</span>'
+, input_tree => [ {
+	label => 'News',
+	href => '/root/news',
+}, {
+	label => 'Blogs',
+	href => '/root/blog/John',
+	children => [ {
+		label => 'John',
+		href => '/root/blog/John',
+	}, {
+		label => 'Alice',
+		href => '/root/blog/Alice',
+	} ],
+} ]);
+
+package main;
+
+my $object = T->new;
+is_deeply($object->v, undef);
+my $stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<ul>
+  <li>
+    <a href="/root/news">News</a>
+  </li>
+  <li>
+    <a href="/root/blog/John">Blogs</a>
+  </li>
+</ul>
+ENDS
+
+my $arg = {};
+$object->v($arg);
+my $old_res = $stash;
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, $old_res) or diag(Dumper($stash));
+is_deeply($arg, {});
+
+$arg->{selections} = [ '/root/blog/Alice' ];
+$stash = {};
+$object->ht_set_widget_option('v', 'selection_attribute', 'href');
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<ul>
+  <li>
+    <a href="/root/news">News</a>
+  </li>
+  <li>
+    <span class="selected">Blogs</span>
+    <ul>
+      <li>
+        <a href="/root/blog/John">John</a>
+      </li>
+      <li>
+        <span class="selected">Alice</span>
+      </li>
+    </ul>
+  </li>
+</ul>
+ENDS
+is_deeply($arg, { selections => [ '/root/blog/Alice' ] });
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash, { v => {
+	selections => [ '/root/blog/Alice' ]
+	, selection_attribute => 'href'
+} }) ], []);
+

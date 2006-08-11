@@ -1,14 +1,14 @@
 MANIFEST
 LICENSE
 README
-Todo
-Changes
 lib/HTML/Tested.pm
 lib/HTML/Tested/List.pm
 lib/HTML/Tested/List/Renderer.pm
+lib/HTML/Tested/List/Table.pm
 lib/HTML/Tested/List/Pager.pm
 lib/HTML/Tested/Test.pm
 lib/HTML/Tested/Test/Value.pm
+lib/HTML/Tested/Test/Upload.pm
 lib/HTML/Tested/Test/Radio.pm
 lib/HTML/Tested/Test/List.pm
 lib/HTML/Tested/Test/Request.pm
@@ -45,6 +45,7 @@ t/130_submit.t
 t/140_hidden.t
 t/150_radio.t
 t/160_seal.t
+t/170_list_table.t
 t/make_form_html.pl
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

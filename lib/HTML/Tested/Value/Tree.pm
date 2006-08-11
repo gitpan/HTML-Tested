@@ -2,12 +2,16 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Value::Tree;
+use base 'HTML::Tested::Value';
+
+sub encode_value { return $_[1]; }
 
 sub _render_from_selection_tree {
 	my ($self, $context, $nodes, $sel_tree, $ident) = @_;
 	my $res = "$ident<ul>\n";
 	for my $n (@$nodes) {
-		my $n_sel = $sel_tree->{ $n->{ $context->{selection_attribute} } };
+		my $sa = $context->{selection_attribute};
+		my $n_sel = $sa ? $sel_tree->{ $n->{ $sa } } : undef;
 		my $new_ident = "$ident  ";
 		$res .= "$new_ident<li>\n";
 		if ($n_sel) {
@@ -41,14 +45,35 @@ sub _build_selection_tree {
 	return $tree;
 }
 
+sub _get_tree_option {
+	my ($self, $caller, $val, $opt) = @_;
+	my $res = $val->{$opt};
+	return $res if ($res || !$caller);
+
+	$res = $caller->ht_get_widget_option($self->name, $opt);
+	$val->{$opt} = $res;
+	return $res;
+}
+
 sub value_to_string {
-	my ($self, $name, $val) = @_;
-	my $tree = $val->{selection_tree} 
-			|| $self->_build_selection_tree($val->{input_tree}
-				, { map { ($_, 1) } @{ $val->{selections} } }
-				, $val->{selection_attribute});
-	return $self->_render_from_selection_tree($val, $val->{input_tree}, 
-			$tree, '');
+	my ($self, $name, $val, $caller) = @_;
+
+	# Copy var aside, we'll modify it in _get_tree_option
+	$val = $val ? { %$val } : {};
+
+	my $input = $self->_get_tree_option($caller, $val, 'input_tree');
+	my $sel_attr = $self->_get_tree_option($caller, $val
+			, 'selection_attribute');
+
+	# Put those into context
+	$self->_get_tree_option($caller, $val, 'collapsed_format');
+	$self->_get_tree_option($caller, $val, 'selected_format');
+
+	my $tree = $val->{selection_tree};
+	$tree = $self->_build_selection_tree($input
+			, { map { ($_, 1) } @{ $val->{selections} } }
+			, $sel_attr) if (!$tree && $sel_attr);
+	return $self->_render_from_selection_tree($val, $input, $tree, '');
 }
 
 sub _render_from_format {
@@ -63,7 +88,8 @@ sub _render_from_format {
 sub _render_selected_node {
 	my ($self, $context, $node, $ident) = @_;
 	return $self->_render_from_format($context->{selected_format}
-			|| '<span class="selected">%value%</span>', $node, $ident);
+				|| '<span class="selected">%value%</span>'
+			, $node, $ident);
 }
 
 sub _render_collapsed_node {

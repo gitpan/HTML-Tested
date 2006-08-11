@@ -3,12 +3,13 @@ use warnings FATAL => 'all';
 
 package HTML::Tested::Test::Request::Upload;
 use base 'Class::Accessor';
-__PACKAGE__->mk_accessors(qw(name filename));
+__PACKAGE__->mk_accessors(qw(name filename fh));
 
 package HTML::Tested::Test::Request;
 use base 'Class::Accessor';
 use HTML::Tested::Seal;
 use Data::Dumper;
+use File::Basename qw(basename);
 
 __PACKAGE__->mk_accessors(qw(_param _pnotes _uploads));
 
@@ -56,14 +57,18 @@ sub pnotes {
 	$self->_pnotes->{$name} = $val;
 }
 
+sub add_upload {
+	my ($self, $n, $v) = @_;
+	$self->_uploads([]) unless $self->_uploads;
+	open(my $fh, $v) or die "Unable to open $v";
+	push @{ $self->_uploads }, HTML::Tested::Test::Request::Upload->new({
+			name => $n, filename => basename($v) , fh => $fh });
+}
+
 sub upload {
-	my $ups = shift()->_uploads || return ();
-	my @res;
-	while (my ($n, $v) = each %$ups) {
-		push @res, HTML::Tested::Test::Request::Upload->new({
-				name => $n, filename => $v });
-	}
-	return @res;
+	my ($self, $n) = @_;
+	my $ups = $self->_uploads || [];
+	return $n ? (grep { $_->name eq $n } @$ups)[0] : @$ups;
 }
 
 sub as_string {

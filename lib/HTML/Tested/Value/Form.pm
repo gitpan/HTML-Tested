@@ -78,9 +78,9 @@ sub aggregate_validators {
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	my $res = "<form id=\"$name\" name=\"$name\" method=\"post\""
-			. " action=\"$val\"";
+			. " action=\"$val\" enctype=\"multipart/form-data\"";
 	my @vals = $self->aggregate_validators or return "$res>\n";
-	$res .= " onsubmit=\"return validate_$name(this)\">\n";
+	$res .= "\n\tonsubmit=\"return validate_$name(this)\">\n";
 	$res = "<script language=\"javascript\">\n"
 		. "function validate_$name(form) {\n\treturn "
 		. join("\n\t\t&& ", map {

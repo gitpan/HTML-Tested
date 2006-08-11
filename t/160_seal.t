@@ -96,7 +96,8 @@ $object->v(undef);
 $object->ht_render($stash);
 ok(exists $stash->{v});
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
-		$stash, { v => '' }) ], [ 'HT_SEALED was not defined on v' ]);
+		$stash, { v => '' }) ]
+	, [ 'HT_SEALED was not defined on v' ]);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
 		$stash, { HT_SEALED_v => '' }) ], []);

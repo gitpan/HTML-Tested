@@ -20,7 +20,7 @@ $object->v('u');
 my $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<form id="v" name="v" method="post" action="u">
+<form id="v" name="v" method="post" action="u" enctype="multipart/form-data">
 ENDS
 
 package T2;
@@ -39,7 +39,7 @@ is_deeply($object->b, undef);
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS
-<form id="v" name="v" method="post" action="u">
+<form id="v" name="v" method="post" action="u" enctype="multipart/form-data">
 ENDS
 	, a => <<ENDA
 <input type="text" name="a" id="a" value="5" />
@@ -72,7 +72,8 @@ function validate_v(form) {
 	return validate(form, 'a', /^\d+$/);
 }
 </script>
-<form id="v" name="v" method="post" action="u" onsubmit="return validate_v(this)">
+<form id="v" name="v" method="post" action="u" enctype="multipart/form-data"
+	onsubmit="return validate_v(this)">
 ENDS
 	, a => <<ENDA
 <input type="text" name="a" id="a" value="5" />
@@ -102,7 +103,8 @@ function validate_v(form) {
 		&& validate(form, 'b', /^\d+$/);
 }
 </script>
-<form id="v" name="v" method="post" action="u" onsubmit="return validate_v(this)">
+<form id="v" name="v" method="post" action="u" enctype="multipart/form-data"
+	onsubmit="return validate_v(this)">
 ENDS
 	, a => <<ENDA
 <input type="text" name="a" id="a" value="5" />
@@ -141,7 +143,8 @@ function validate_v(form) {
 		&& validate(form, 'b', /^\d+$/);
 }
 </script>
-<form id="v" name="v" method="post" action="u" onsubmit="return validate_v(this)">
+<form id="v" name="v" method="post" action="u" enctype="multipart/form-data"
+	onsubmit="return validate_v(this)">
 ENDS
 	, a => <<ENDA
 <input type="text" name="a" id="a" value="5" />

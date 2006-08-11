@@ -66,9 +66,10 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.17;
+our $VERSION = 0.18;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
+__PACKAGE__->mk_classdata('Widgets_List');
 
 =head1 METHODS
 
@@ -82,22 +83,32 @@ loading.
 
 =cut
 
+sub _make_tested_widget {
+	my ($class, $widget_name, $widget_class, $dont_use
+			, $class1, $name, @args) = @_;
+	unless ($dont_use) {
+		eval "use $widget_class";
+		confess "Error using $widget_class: $@" if $@;
+	}
+	# to avoid inheritance troubles...
+	my %wm = %{ $class1->Widgets_Map || {} };
+	$class1->Widgets_Map(\%wm);
+	$class1->mk_accessors($name);
+	my $res = $widget_class->new($class1, $name, @args);
+	$class1->Widgets_Map->{$name} = $res;
+
+	my @wl = @{ $class1->Widgets_List || [] };
+	push @wl, $res;
+	$class1->Widgets_List(\@wl);
+	return $res;
+}
+
 sub register_tested_widget {
 	my ($class, $widget_name, $widget_class, $dont_use) = @_;
 	no strict 'refs';
 	*{ "$class\::make_tested_$widget_name" } = sub {
-		my ($class1, $name, @args) = @_;
-		unless ($dont_use) {
-			eval "use $widget_class";
-			confess "Error using $widget_class: $@" if $@;
-		}
-		# to avoid inheritance troubles...
-		my %wm = %{ $class1->Widgets_Map || {} };
-		$class1->Widgets_Map(\%wm);
-		$class1->mk_accessors($name);
-		my $res = $widget_class->new($class1, $name, @args);
-		$class1->Widgets_Map->{$name} = $res;
-		return $res;
+		$class->_make_tested_widget($widget_name , $widget_class
+				, $dont_use, @_);
 	};
 }
 
@@ -154,7 +165,7 @@ sub ht_convert_request_to_tree {
 	}
 	for my $u ($r->upload) {
 		$class->ht_absorb_one_value(\%res, 
-				$u->filename, split('__', $u->name));
+				$u->fh, split('__', $u->name));
 	}
 	return bless(\%res, $class);
 }
@@ -188,7 +199,7 @@ __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
 		password_box PasswordBox dropdown DropDown checkbox CheckBox
 		link Link upload Upload form Form submit Submit
-		hidden Hidden radio Radio);
+		hidden Hidden radio Radio tree Tree);
 
 while (my ($n, $v) = each %vals) {
 	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");

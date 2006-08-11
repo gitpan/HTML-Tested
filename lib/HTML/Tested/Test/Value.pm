@@ -42,11 +42,11 @@ sub check_stash {
 	my $e_val = $e_stash->{$name};
 	my $r_val = HTML::Tested::Test::Ensure_Value_To_Check(
 			$r_stash, $name, $e_val, \@err);
-	goto OUT unless defined($r_val);
+	goto OUT unless defined($r_val) || @err;
 
 	($e_val, $r_val) = $class->_handle_sealed($e_root, $name
 					, $e_val, $r_val, \@err);
-	goto OUT if ($r_val eq $e_val);
+	goto OUT if ($r_val eq $e_val || @err);
 
 	@err = HTML::Tested::Test::Stash_Mismatch($name, $r_val, $e_val);
 OUT:
