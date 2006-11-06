@@ -4,35 +4,35 @@ HTML::Tested - Provides HTML widgets with the built-in means of testing.
 
 =head1 SYNOPSIS
 
-	package MyPage;
-  	use base 'HTML::Tested';
+    package MyPage;
+      use base 'HTML::Tested';
 
-	__PACKAGE__->make_tested_value('x');
+    __PACKAGE__->make_tested_value('x');
 
-	# Register my own widget
-	__PACKAGE__->register_tested_widget('my_widget', 'My::App::Widget');
-	__PACKAGE__->make_tested_my_widget('w');
+    # Register my own widget
+    __PACKAGE__->register_tested_widget('my_widget', 'My::App::Widget');
+    __PACKAGE__->make_tested_my_widget('w');
 
 
-	# Later, in the test for example
-	package main;
+    # Later, in the test for example
+    package main;
 
-	my $p = MyPage->construct_somehow;
-	$p->x('Hi');
-	my $stash = {};
+    my $p = MyPage->construct_somehow;
+    $p->x('Hi');
+    my $stash = {};
 
-	$p->ht_render($stash);
+    $p->ht_render($stash);
 
-	# stash contains x => 'Hi'
-	# We can pass it to templating mechanism
+    # stash contains x => 'Hi'
+    # We can pass it to templating mechanism
 
-	# Stash checking function
-	my @errors = HTML::Tested::Test->check_stash(
-			'MyPage', $stash, { x => 'Hi' });
+    # Stash checking function
+    my @errors = HTML::Tested::Test->check_stash(
+            'MyPage', $stash, { x => 'Hi' });
 
-	# Stash checking function
-	my @errors = HTML::Tested::Test->check_text(
-			'MyPage', '<html>x</html>', { x => 'Hi' });
+    # Stash checking function
+    my @errors = HTML::Tested::Test->check_text(
+            'MyPage', '<html>x</html>', { x => 'Hi' });
 
 =head1 DISCLAIMER
 	
@@ -66,22 +66,10 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.18;
+our $VERSION = 0.19;
 
 __PACKAGE__->mk_classdata('Widgets_Map');
 __PACKAGE__->mk_classdata('Widgets_List');
-
-=head1 METHODS
-
-=head2 register_tested_widget(widget_name, widget_class, dont_use)
-
-Registers widget to be available for the inheriting classes.
-This implicitly creates make_tested_<widget_name> function.
-C<widget_class> should provide behind the scenes support for the widget.
-C<dont_use> tells HTML::Tested to not use the module at the time of
-loading.
-
-=cut
 
 sub _make_tested_widget {
 	my ($class, $widget_name, $widget_class, $dont_use
@@ -102,6 +90,18 @@ sub _make_tested_widget {
 	$class1->Widgets_List(\@wl);
 	return $res;
 }
+
+=head1 METHODS
+
+=head2 register_tested_widget(widget_name, widget_class, dont_use)
+
+Registers widget to be available for the inheriting classes.
+This implicitly creates make_tested_<widget_name> function.
+C<widget_class> should provide behind the scenes support for the widget.
+C<dont_use> tells HTML::Tested to not use the module at the time of
+loading.
+
+=cut
 
 sub register_tested_widget {
 	my ($class, $widget_name, $widget_class, $dont_use) = @_;
@@ -158,11 +158,13 @@ compatible object.
 sub ht_convert_request_to_tree {
 	my ($class, $r) = @_;
 	my @pkeys = $r->param;
-	my %res;
+	my %res = (__ht_crqt_state => {});
 	for my $p (sort @pkeys) {
 		$class->ht_absorb_one_value(\%res, 
 				$r->param($p), split('__', $p));
 	}
+	delete $res{__ht_crqt_state};
+
 	for my $u ($r->upload) {
 		$class->ht_absorb_one_value(\%res, 
 				$u->fh, split('__', $u->name));
@@ -170,6 +172,11 @@ sub ht_convert_request_to_tree {
 	return bless(\%res, $class);
 }
 
+=head2 ht_get_widget_option($widget_name, $option_name)
+
+Gets option C<$option_name> for widget named C<$widget_name>.
+
+=cut
 sub ht_get_widget_option {
 	my ($self, $wname, $opname) = @_;
 	my $w = $self->Widgets_Map->{$wname}
@@ -181,6 +188,11 @@ sub ht_get_widget_option {
 	return $w->options->{$opname};
 }
 
+=head2 ht_set_widget_option($widget_name, $option_name, $value)
+
+Sets option C<$option_name> to C<$value> for widget named C<$widget_name>.
+
+=cut
 sub ht_set_widget_option {
 	my ($self, $wname, $opname, $val) = @_;
 	my $w = $self->Widgets_Map->{$wname}

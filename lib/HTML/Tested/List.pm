@@ -53,18 +53,15 @@ sub bless_from_tree {
 
 sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
-	my $arr = $root->{ $self->name };
+	my $arr = $root->{ $self->name } || [];
 	my $id = shift(@path) or return;
-	my $c = bless({}, $self->containee);
-	if ($arr) {
-		if (@$arr != $id) {
-			push @$arr, $c;
-		}
-	} else {
-		$arr = [ $c ];
+	my $last = $arr->[ @$arr - 1 ];
+	if (!$last || $root->{__ht_crqt_state}->{ $self->name } ne $id) {
+		$root->{__ht_crqt_state}->{ $self->name } = $id;
+		$last = bless({}, $self->containee);
+		push @$arr, $last;
 	}
-	$self->containee->ht_absorb_one_value($arr->[ @$arr - 1 ]
-						, $val, @path);
+	$self->containee->ht_absorb_one_value($last, $val, @path);
 	$root->{ $self->name } = $arr;
 }
 

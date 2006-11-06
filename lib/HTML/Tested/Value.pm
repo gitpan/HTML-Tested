@@ -1,3 +1,11 @@
+=head1 NAME
+
+HTML::Tested::Value - Base class for most HTML::Tested widgets.
+
+=head1 METHODS
+
+=cut
+
 use strict;
 use warnings FATAL => 'all';
 
@@ -12,6 +20,11 @@ sub new {
 	return $self;
 }
 
+=head2 $widget->name
+
+Returns name of the widget.
+
+=cut
 sub name { return shift()->{name}; }
 sub options { return shift()->{_options}; }
 
@@ -36,6 +49,11 @@ sub get_default_value {
 			: '';
 }
 
+=head2 $widget->get_value($caller, $id)
+
+It is called from $widget->render to get the value to render.
+
+=cut
 sub get_value {
 	my ($self, $caller, $id) = @_;
 	my $n = $self->name;
@@ -43,11 +61,23 @@ sub get_value {
 	return defined($val) ? $val : $self->get_default_value($caller, $id);
 }
 
+=head2 $widget->seal_value($value)
+
+It is called from $widget->render to seal the value before putting it to stash.
+See HTML::Tested::Seal for sealing functionality.
+
+=cut
 sub seal_value {
 	my ($self, $val) = @_;
 	return HTML::Tested::Seal->instance->encrypt($val);
 }
 
+=head2 $widget->render($caller, $stash, $id)
+
+Renders widget into $stash. For HTML::Tested::Value it essentially means
+assigning $stash->{ $widget->name } with $widget->get_value.
+
+=cut
 sub render {
 	my ($self, $caller, $stash, $id) = @_;
 	my $res = '';
@@ -76,3 +106,23 @@ sub absorb_one_value {
 }
 
 1;
+
+=head1 AUTHOR
+
+	Boris Sukholitko (boriss@gmail.com)
+	
+=head1 COPYRIGHT
+
+This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+The full text of the license can be found in the
+LICENSE file included with this module.
+
+
+=head1 SEE ALSO
+
+HTML::Tested
+
+=cut
+

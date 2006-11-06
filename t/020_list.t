@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -146,3 +146,23 @@ is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b'
 $res = L2->ht_convert_request_to_tree($req);
 $tree ={ l1 => [ { v1 => 'a', ht_id => 1 }, { ht_id => 2, v1 => 'b' }, ] };
 is_deeply($res, $tree) or diag(Dumper($res));
+
+package X;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_list('department_list', 'X2');
+
+package X2;
+use base 'HTML::Tested';
+__PACKAGE__->make_tested_value($_) for qw(building_dropdown office_edit);
+
+package main;
+
+$req = HTML::Tested::Test::Request->new({ _param => {
+	'department_list__2__building_dropdown' => '1',
+	'department_list__2__office_edit' => '2',
+} });
+
+$tree = X->ht_convert_request_to_tree($req);
+is_deeply($tree->department_list, [ {
+	office_edit => 2, building_dropdown => 1
+} ]) or diag(Dumper($tree));
