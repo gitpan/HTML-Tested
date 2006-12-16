@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Data::Dumper;
 use Carp;
 
@@ -37,7 +37,7 @@ my $w_obj;
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->register_tested_widget('wn1', 'W1', 1);
+__PACKAGE__->register_tested_widget('wn1', 'W1');
 $w_obj = __PACKAGE__->make_tested_wn1('w', param1 => 'arg1');
 
 package main;
@@ -101,4 +101,27 @@ $object = T2->new({ v => 1, t3 => 2 });
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => 1 });
+
+my $_w2_i = 0;
+
+package W2;
+use base 'HTML::Tested::Value';
+
+sub render {
+	my ($self, $caller, $stash) = @_;
+	$stash->{w} .= $self->name . ",";
+}
+
+package T4;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('W2', "o$_") for (0 .. 10);
+
+package main;
+
+$object = T4->new;
+$stash = {};
+$object->ht_render($stash);
+
+# check order of rendering
+is_deeply($stash, { w => 'o0,o1,o2,o3,o4,o5,o6,o7,o8,o9,o10,' });
 

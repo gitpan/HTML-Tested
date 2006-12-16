@@ -32,20 +32,15 @@ sub compare_stashes {
 				. "differ from "
 				. "expected " . Dumper($e_stash));
 	}
-
-	my $widgets_map = $e_root->Widgets_Map;
 	return $class->_run_checks('stash', $e_root, $stash, $e_stash);
 }
 
 sub _run_checks {
 	my ($class, $check, $e_root, $res, $e_stash) = @_;
-	my $widgets_map = $e_root->Widgets_Map;
 	my $f = "check_$check";
-	my @res;
-	while (my ($n, $w) = each %$widgets_map) {
-		push @res, $w->__ht_tester->$f($e_root, $n, $e_stash, $res);
-	}
-	return @res;
+	return map {
+		$_->__ht_tester->$f($e_root, $_->name, $e_stash, $res);
+	} @{ $e_root->Widgets_List };
 }
 
 sub compare_text_to_stash {
@@ -63,12 +58,10 @@ sub Make_Expected_Class {
 		push @{ *{ "$package\::ISA" } }, $target_class 
 			unless @{ *{ "$package\::ISA" } };
 	};
-	my $widgets_map = $target_class->Widgets_Map;
-	my %new_map;
-	for my $k (keys %$widgets_map) {
-		$new_map{$k} = $widgets_map->{$k} if exists($expected->{$k});
-	}
-	$package->Widgets_Map(\%new_map);
+	my $wl = $target_class->Widgets_List;
+	$package->Widgets_List([ grep {
+		exists($expected->{ $_->name });
+	} @$wl ]);
 	return $package;
 }
 
@@ -95,7 +88,7 @@ sub bless_from_tree_for_test {
 			push @disabled, $n;
 			next;
 		}
-		my $wc = $e_class->Widgets_Map->{$n};
+		my $wc = $e_class->ht_find_widget($n);
 		$res->{$n} = $wc ?
 			$wc->__ht_tester->bless_from_tree($wc, $v, $err)
 			: $class->bless_unknown_widget($n, $v, $err);
@@ -142,7 +135,7 @@ sub convert_tree_to_param {
 	while (my ($n, $v) = each %$tree) {
 		$v = HTML::Tested::Seal->instance->encrypt($v)
 			if ($n =~ s/^HT_SEALED_//);
-		my $wc = $obj_class->Widgets_Map->{$n};
+		my $wc = $obj_class->ht_find_widget($n);
 		if ($wc) {
 			$wc->__ht_tester->_convert_to_param($wc, $r, 
 				$parent_name ? $parent_name . "__$n" : $n

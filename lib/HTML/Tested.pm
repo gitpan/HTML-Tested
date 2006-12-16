@@ -66,25 +66,16 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = 0.19;
+our $VERSION = 0.20;
 
-__PACKAGE__->mk_classdata('Widgets_Map');
 __PACKAGE__->mk_classdata('Widgets_List');
 
-sub _make_tested_widget {
-	my ($class, $widget_name, $widget_class, $dont_use
-			, $class1, $name, @args) = @_;
-	unless ($dont_use) {
-		eval "use $widget_class";
-		confess "Error using $widget_class: $@" if $@;
-	}
-	# to avoid inheritance troubles...
-	my %wm = %{ $class1->Widgets_Map || {} };
-	$class1->Widgets_Map(\%wm);
+sub ht_add_widget {
+	my ($class1, $widget_class, $name, @args) = @_;
 	$class1->mk_accessors($name);
 	my $res = $widget_class->new($class1, $name, @args);
-	$class1->Widgets_Map->{$name} = $res;
 
+	# to avoid inheritance troubles...
 	my @wl = @{ $class1->Widgets_List || [] };
 	push @wl, $res;
 	$class1->Widgets_List(\@wl);
@@ -104,11 +95,10 @@ loading.
 =cut
 
 sub register_tested_widget {
-	my ($class, $widget_name, $widget_class, $dont_use) = @_;
+	my ($class, $widget_name, $widget_class) = @_;
 	no strict 'refs';
 	*{ "$class\::make_tested_$widget_name" } = sub {
-		$class->_make_tested_widget($widget_name , $widget_class
-				, $dont_use, @_);
+		shift()->ht_add_widget($widget_class, @_);
 	};
 }
 
@@ -120,12 +110,23 @@ C<stash> should be hash reference.
 =cut
 sub ht_render {
 	my ($self, $stash, $parent_name) = @_;
-	while (my ($n, $v) = each %{ $self->Widgets_Map }) {
+	for my $v (@{ $self->Widgets_List }) {
+		my $n = $v->name;
 		my $id = $parent_name ? $parent_name . "__$n" : $n;
 		$v->render($self, $stash, $id);
 	}
 }
 
+=head2 ht_find_widget($widget_name)
+
+Finds widget named C<$widget_name>.
+
+=cut
+sub ht_find_widget {
+	my ($self, $wn) = @_;
+	my ($res) = grep { $_->name eq $wn } @{ $self->Widgets_List };
+	return $res;
+}
 
 =head2 ht_bless_from_tree(class, tree)
 
@@ -136,7 +137,7 @@ sub ht_bless_from_tree {
 	my ($class, $tree) = @_;
 	my $res = {};
 	while (my ($n, $v) = each %$tree) {
-		my $wc = $class->Widgets_Map->{$n};
+		my $wc = $class->ht_find_widget($n);
 		$res->{$n} = $wc ? $wc->bless_from_tree($v) : $v;
 	}
 	return bless($res, $class);
@@ -145,7 +146,7 @@ sub ht_bless_from_tree {
 sub ht_absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
 	my $p = shift(@path) or return;
-	my $wc = $self->Widgets_Map->{$p} or return;
+	my $wc = $self->ht_find_widget($p) or return;
 	$wc->absorb_one_value($root, $val, @path);
 }
 
@@ -179,7 +180,7 @@ Gets option C<$option_name> for widget named C<$widget_name>.
 =cut
 sub ht_get_widget_option {
 	my ($self, $wname, $opname) = @_;
-	my $w = $self->Widgets_Map->{$wname}
+	my $w = $self->ht_find_widget($wname)
 		or confess "Unknown widget $wname";
 	if (ref($self)) {
 		my $n = "__ht__$wname\_$opname";
@@ -195,7 +196,7 @@ Sets option C<$option_name> to C<$value> for widget named C<$widget_name>.
 =cut
 sub ht_set_widget_option {
 	my ($self, $wname, $opname, $val) = @_;
-	my $w = $self->Widgets_Map->{$wname}
+	my $w = $self->ht_find_widget($wname)
 		or confess "Unknown widget $wname";
 	if (ref($self)) {
 		$self->{"__ht__$wname\_$opname"} = $val;
@@ -204,6 +205,8 @@ sub ht_set_widget_option {
 	}
 }
 
+use HTML::Tested::Value;
+use HTML::Tested::List;
 __PACKAGE__->register_tested_widget('value', 'HTML::Tested::Value');
 __PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
 
@@ -214,9 +217,10 @@ my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
 		hidden Hidden radio Radio tree Tree);
 
 while (my ($n, $v) = each %vals) {
+	eval "use HTML::Tested::Value::$v";
+	confess "Error using HTML::Tested::Value::$v: $@" if $@;
 	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");
-}
-}
+} }
 
 1;
 

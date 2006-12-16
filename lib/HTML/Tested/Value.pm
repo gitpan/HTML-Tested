@@ -16,7 +16,7 @@ use Carp;
 
 sub new {
 	my ($class, $parent, $name, %opts) = @_;
-	my $self = bless({ name => $name, , _options => \%opts }, $class);
+	my $self = bless({ name => $name, _options => \%opts }, $class);
 	return $self;
 }
 

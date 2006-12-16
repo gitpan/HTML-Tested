@@ -4,7 +4,6 @@ use warnings FATAL => 'all';
 use Test::More tests => 19;
 use Data::Dumper;
 use Carp;
-BEGIN { $SIG{__DIE__} = sub { diag(Carp::longmess(@_)); fail; } }
 
 BEGIN { use_ok('HTML::Tested'); 
 	use_ok('HTML::Tested::Test'); 

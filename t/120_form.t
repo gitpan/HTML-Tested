@@ -127,13 +127,13 @@ $stash = {};
 
 is_deeply([ $object->validate_v ], []);
 HTML::Tested::Value::Form::Push_Constraints(
-		$object->Widgets_Map->{a}, '/^\d+$/');
+		$object->ht_find_widget('a'), '/^\d+$/');
 is_deeply([ $object->validate_v ], [ 'a', '/^\d+$/' ]);
 $object->a(5);
 is_deeply([ $object->validate_v ], []);
 
 HTML::Tested::Value::Form::Push_Constraints(
-		$object->Widgets_Map->{b}, '/^\d+$/');
+		$object->ht_find_widget('b'), '/^\d+$/');
 
 $object->ht_render($stash);
 is_deeply($stash, { v => <<'ENDS'
