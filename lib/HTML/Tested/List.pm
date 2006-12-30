@@ -10,8 +10,11 @@ sub new {
 	my ($class, $parent, $name, $c, %args) = @_;
 	$args{containee} ||= $c;
 	$args{name} ||= $name;
-	$args{renderers} ||= [ 'HTML::Tested::List::Renderer'
-		, 'HTML::Tested::List::Table' ];
+
+	my @renderers = ('HTML::Tested::List::Renderer');
+	push @renderers, HTML::Tested::List::Table->new if $args{render_table};
+
+	$args{renderers} ||= \@renderers;
 	{
 		no strict 'refs';
 		*{ "$parent\::$name\_containee" } = sub { return $c; };
@@ -63,6 +66,11 @@ sub absorb_one_value {
 	}
 	$self->containee->ht_absorb_one_value($last, $val, @path);
 	$root->{ $self->name } = $arr;
+}
+
+sub validate {
+	my ($self, $arr) = @_;
+	return map { ($_->ht_validate) } (@{ $arr || [] });
 }
 
 1;

@@ -1,21 +1,26 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested::List'); 
 }
 
-package L;
-use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'LR');
-
 package LR;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v3', column_title => 'V3');
-__PACKAGE__->make_tested_value('v2');
-__PACKAGE__->make_tested_value('v1', column_title => 'V1');
+__PACKAGE__->ht_add_widget("HTML::Tested::Value", 'v3', column_title => 'V3');
+__PACKAGE__->ht_add_widget("HTML::Tested::Value", 'v2');
+__PACKAGE__->ht_add_widget("HTML::Tested::Value", 'v1', column_title => 'V1');
+
+package L;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget("HTML::Tested::List", 'l1', 'LR', render_table => 1);
+
+
+package L2;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget("HTML::Tested::List", 'l1', 'LR');
 
 package main;
 
@@ -51,4 +56,22 @@ is_deeply($stash, { l1 => [ { v1 => '1a', v2 => '2a', v3 => '3a' },
 ENDS
 }) 
 	or diag(Dumper($stash));
+
+bless $object, 'L2';
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { l1 => [ { v1 => '1a', v2 => '2a', v3 => '3a' }, 
+				{ v1 => '1b', v2 => '2b', v3 => '3b' } ]
+}) 
+	or diag(Dumper($stash));
+
+eval {
+package L3;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('HTML::Tested::List', 'l1', 'L2', render_table => 1);
+};
+
+package main;
+like($@, qr/No columns found!/);
+
 

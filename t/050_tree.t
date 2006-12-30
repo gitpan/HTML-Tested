@@ -8,7 +8,7 @@ use Carp;
 BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); }; };
 
 BEGIN { use_ok('HTML::Tested::Value::Tree');
-	use_ok('HTML::Tested');
+	use_ok('HTML::Tested', "HTV");
 	use_ok('HTML::Tested::Test');
 };
 
@@ -114,7 +114,7 @@ ENDS
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_tree('v'
+__PACKAGE__->ht_add_widget(::HTV."::Tree", 'v'
 , collapsed_format => '<a href="%href%">%label%</a>'
 , selected_format => '<span class="selected">%label%</span>'
 , input_tree => [ {

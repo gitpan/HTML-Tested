@@ -5,7 +5,7 @@ HTML::Tested - Provides HTML widgets with the built-in means of testing.
 =head1 SYNOPSIS
 
     package MyPage;
-      use base 'HTML::Tested';
+    use base 'HTML::Tested';
 
     __PACKAGE__->make_tested_value('x');
 
@@ -64,12 +64,29 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested;
-use base 'Class::Accessor', 'Class::Data::Inheritable';
+use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.20;
+our $VERSION = 0.21;
 
-__PACKAGE__->mk_classdata('Widgets_List');
+our @EXPORT_OK = qw(HT HTV);
 
+use constant HT => 'HTML::Tested';
+use constant HTV => 'HTML::Tested::Value';
+
+__PACKAGE__->mk_classdata('Widgets_List', []);
+
+=head1 METHODS
+
+=head2 $class->ht_add_widget($widget_class, $widget_name, @widget_args)
+
+Adds widget implemented by C<$widget_class> to C<$class> as C<$widget_name>.
+C<@widget_args> are passed as is into $widget_class->new function.
+
+For example, A->ht_add_widget("HTML::Tested::Value", "a", default_value => "b");
+will create value widget (and corresponding C<a> accessor) in A class which
+will have default value "b".
+
+=cut
 sub ht_add_widget {
 	my ($class1, $widget_class, $name, @args) = @_;
 	$class1->mk_accessors($name);
@@ -80,26 +97,6 @@ sub ht_add_widget {
 	push @wl, $res;
 	$class1->Widgets_List(\@wl);
 	return $res;
-}
-
-=head1 METHODS
-
-=head2 register_tested_widget(widget_name, widget_class, dont_use)
-
-Registers widget to be available for the inheriting classes.
-This implicitly creates make_tested_<widget_name> function.
-C<widget_class> should provide behind the scenes support for the widget.
-C<dont_use> tells HTML::Tested to not use the module at the time of
-loading.
-
-=cut
-
-sub register_tested_widget {
-	my ($class, $widget_name, $widget_class) = @_;
-	no strict 'refs';
-	*{ "$class\::make_tested_$widget_name" } = sub {
-		shift()->ht_add_widget($widget_class, @_);
-	};
 }
 
 =head2 ht_render(stash)
@@ -204,6 +201,44 @@ sub ht_set_widget_option {
 		$w->options->{$opname} = $val;
 	}
 }
+
+=head2 $root->ht_validate
+
+Recursively validates all contained widgets. See C<HTML::Tested::Value> for
+C<$widget->validate> method description.
+
+Prepends the names of the widgets which failed validation into result arrays.
+
+=cut
+sub ht_validate {
+	my $self = shift;
+	my @res;
+	for my $v (@{ $self->Widgets_List }) {
+		my $n = $v->name;
+		push @res, map { [ $n, @$_ ] } $v->validate($self->$n);
+	}
+	return @res;
+}
+
+# All of the following is deprecated
+our $Deprecated = 5;
+sub register_tested_widget {
+	my ($class, $widget_name, $widget_class) = @_;
+	no strict 'refs';
+	*{ "$class\::make_tested_$widget_name" } = sub {
+		local $Carp::CarpLevel = 1;
+		carp("# make_tested_$widget_name is deprecated. Use ht_add_widget "
+				. "with $widget_class directly. "
+				. "Hint: you can import HT shortcut "
+				. "for HTML::Tested. "
+				. " Please also use the relevant class."
+				. " Warning no $Deprecated")
+			if $Deprecated > 0;
+		$Deprecated--;
+		shift()->ht_add_widget($widget_class, @_);
+	};
+}
+
 
 use HTML::Tested::Value;
 use HTML::Tested::List;

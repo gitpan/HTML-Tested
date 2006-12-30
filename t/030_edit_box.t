@@ -4,13 +4,13 @@ use warnings FATAL => 'all';
 use Test::More tests => 5;
 use Data::Dumper;
 
-BEGIN { use_ok('HTML::Tested'); 
+BEGIN { use_ok('HTML::Tested', "HTV"); 
 	use_ok('HTML::Tested::Test'); 
 }
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_edit_box('v');
+__PACKAGE__->ht_add_widget(::HTV."::EditBox", 'v');
 
 package main;
 

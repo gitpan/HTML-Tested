@@ -5,13 +5,13 @@ use Test::More tests => 26;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
-BEGIN { use_ok('HTML::Tested'); 
+BEGIN { use_ok('HTML::Tested', 'HT'); 
 	use_ok('HTML::Tested::Test'); 
 }
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v', default_value => 'xxx');
+__PACKAGE__->ht_add_widget(::HT."::Value", 'v', default_value => 'xxx');
 
 package main;
 
@@ -22,7 +22,7 @@ my $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b' }) or diag(Dumper($stash));
 
-T->make_tested_marked_value('mv');
+T->ht_add_widget(::HT."::Value::Marked", 'mv');
 $object->mv('c');
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b', mv => '<!-- mv --> c' })
@@ -55,7 +55,7 @@ is_deeply($stash, { v => 'xxx', mv => '<!-- mv --> ' })
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('ht_id');
+__PACKAGE__->ht_add_widget(::HT."::Value", 'ht_id');
 
 package main;
 
@@ -65,7 +65,7 @@ is_deeply($req->_param, { ht_id => 5});
 
 package T3;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v', is_disabled => 1);
+__PACKAGE__->ht_add_widget(::HT."::Value", 'v', is_disabled => 1);
 
 package main;
 
@@ -106,7 +106,7 @@ is($object->ht_get_widget_option("v", "is_disabled"), undef);
 
 package T4;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v', is_trusted => 1, default_value => sub {
+__PACKAGE__->ht_add_widget(::HT."::Value", 'v', is_trusted => 1, default_value => sub {
 	my ($self, $id, $caller) = @_;
 	return $self->name . ", $id, " . ref($caller);
 });

@@ -4,13 +4,13 @@ use warnings FATAL => 'all';
 use Test::More tests => 15;
 use Data::Dumper;
 
-BEGIN { use_ok('HTML::Tested'); 
+BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test'); 
 }
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_submit('v');
+__PACKAGE__->ht_add_widget(::HTV.'::Submit', 'v');
 
 package main;
 
@@ -37,7 +37,7 @@ ENDS
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_submit('v', default_value => 'b');
+__PACKAGE__->ht_add_widget(::HTV.'::Submit', 'v', default_value => 'b');
 
 package main;
 

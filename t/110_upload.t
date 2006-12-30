@@ -6,14 +6,14 @@ use Data::Dumper;
 use File::Temp qw(tempdir);
 use File::Slurp;
 
-BEGIN { use_ok('HTML::Tested'); 
+BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test::Request');
 	use_ok('HTML::Tested::Test');
 }
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_upload('v');
+__PACKAGE__->ht_add_widget(::HTV."::Upload", 'v');
 
 package main;
 

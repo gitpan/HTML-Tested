@@ -11,7 +11,7 @@ BEGIN { use_ok('HTML::Tested');
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v', is_sealed => 1);
+__PACKAGE__->ht_add_widget('HTML::Tested::Value', 'v', is_sealed => 1);
 
 package main;
 
@@ -104,7 +104,7 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object),
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_hidden('v', is_sealed => 1);
+__PACKAGE__->ht_add_widget('HTML::Tested::Value::Hidden', 'v', is_sealed => 1);
 
 package main;
 
@@ -124,8 +124,8 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object),
 
 package T3;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_hidden('h', is_sealed => 1);
-__PACKAGE__->make_tested_value('v', is_sealed => 1);
+__PACKAGE__->ht_add_widget('HTML::Tested::Value::Hidden', 'h', is_sealed => 1);
+__PACKAGE__->ht_add_widget('HTML::Tested::Value', 'v', is_sealed => 1);
 
 package main;
 
@@ -158,7 +158,8 @@ is(HTML::Tested::Seal->instance->decrypt($r->param("v")), 'V');
 
 package T4;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_link('v', href_format => 'hello?id=%s&s=%s'
+__PACKAGE__->ht_add_widget('HTML::Tested::Value::Link', 'v'
+		, href_format => 'hello?id=%s&s=%s'
 		, caption => "H", is_sealed => 1);
 package main;
 
@@ -234,7 +235,7 @@ ENCRYPTED
 
 package TU;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v');
+__PACKAGE__->ht_add_widget('HTML::Tested::Value', 'v');
 
 package main;
 

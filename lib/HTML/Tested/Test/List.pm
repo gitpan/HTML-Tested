@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Test::List;
+use Carp;
 
 sub check_stash {
 	my ($class, $e_root, $name, $e_stash, $r_stash) = @_;
@@ -38,6 +39,8 @@ sub check_text {
 sub bless_from_tree {
 	my ($class, $w_class, $p, $err) = @_;
 	my $target = $w_class->containee;
+	confess $w_class->name . " should be ARRAY reference"
+		unless ($p && ref($p) eq 'ARRAY');
 	return [ map {
 		HTML::Tested::Test->bless_from_tree_for_test($target
 				, $_, $err);

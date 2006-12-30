@@ -4,11 +4,11 @@ use warnings FATAL => 'all';
 use Test::More tests => 5;
 use Data::Dumper;
 
-BEGIN { use_ok('HTML::Tested'); }
+BEGIN { use_ok('HTML::Tested', qw(HTV)); }
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_link('v');
+__PACKAGE__->ht_add_widget(::HTV."::Link", 'v');
 
 package main;
 
@@ -23,7 +23,7 @@ ENDS
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_link('v', href_format => 'hello?id=%d&s=%s');
+__PACKAGE__->ht_add_widget(::HTV."::Link", 'v', href_format => 'hello?id=%d&s=%s');
 
 package main;
 
@@ -37,7 +37,7 @@ ENDS
 
 package T3;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_link('v', href_format => 'hello?id=%d&s=%s'
+__PACKAGE__->ht_add_widget(::HTV."::Link", 'v', href_format => 'hello?id=%d&s=%s'
 		, caption => "H");
 
 package main;

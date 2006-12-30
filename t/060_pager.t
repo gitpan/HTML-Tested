@@ -1,23 +1,25 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Data::Dumper;
 
-BEGIN { use_ok('HTML::Tested::List::Pager'); }
+BEGIN { use_ok('HTML::Tested::List::Pager');
+	use_ok('HTML::Tested', "HTV");
+}
 
 my $id = 1;
 
 package L;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'LR', renderers => [
+__PACKAGE__->ht_add_widget("HTML::Tested::List", 'l1', 'LR', renderers => [
 	HTML::Tested::List::Pager->new(2),
 	'HTML::Tested::List::Renderer',
 ]);
 
 package LR;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_marked_value('v1');
+__PACKAGE__->ht_add_widget(::HTV."::Marked", 'v1');
 
 sub ht_id { return $id++; }
 

@@ -5,7 +5,7 @@ use Test::More tests => 19;
 use Data::Dumper;
 use Carp;
 
-BEGIN { use_ok('HTML::Tested'); 
+BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test'); 
 }
 
@@ -13,7 +13,7 @@ my $_id = 1;
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_radio('v', default_value => [ 'a', 'b', 'c' ]);
+__PACKAGE__->ht_add_widget(::HTV.'::Radio', 'v', default_value => [ 'a', 'b', 'c' ]);
 
 package main;
 
@@ -96,7 +96,7 @@ ENDS
 
 package L;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'T');
+__PACKAGE__->ht_add_widget('HTML::Tested::List', 'l1', 'T');
 
 package main;
 
@@ -156,7 +156,7 @@ my $_def_val = [ 'a', [ 'b', 1 ] ];
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_radio('v', default_value => $_def_val);
+__PACKAGE__->ht_add_widget(::HTV.'::Radio', 'v', default_value => $_def_val);
 
 package main;
 

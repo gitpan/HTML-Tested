@@ -1,16 +1,19 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 23;
+use Test::More tests => 26;
 use Data::Dumper;
 use Carp;
 
-BEGIN { use_ok('HTML::Tested');
+BEGIN { use_ok('HTML::Tested', 'HT', "HTV");
 	use_ok('HTML::Tested::Test');
 	use_ok('HTML::Tested::Test::Request');
 	$SIG{__DIE__} = sub { confess(@_); };
 	$SIG{__WARN__} = sub { diag(Carp::longmess(@_)); }
 };
+
+is(HT, "HTML::Tested");
+is(HTV, "HTML::Tested::Value");
 
 my $r = HTML::Tested::Test::Request->new;
 $r->parse_url('/test/url?arg=1&b=c');
@@ -37,8 +40,7 @@ my $w_obj;
 
 package T;
 use base 'HTML::Tested';
-__PACKAGE__->register_tested_widget('wn1', 'W1');
-$w_obj = __PACKAGE__->make_tested_wn1('w', param1 => 'arg1');
+$w_obj = __PACKAGE__->ht_add_widget('W1', 'w', param1 => 'arg1');
 
 package main;
 $object = T->new({ w => 'a' });
@@ -79,7 +81,7 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object),
 
 package T2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value('v');
+__PACKAGE__->ht_add_widget(::HT."::Value", 'v');
 
 package main;
 
@@ -88,7 +90,7 @@ is(T2->can("v_default_value"), undef);
 
 package T3;
 use base 'T2';
-__PACKAGE__->make_tested_value('t3');
+__PACKAGE__->ht_add_widget(::HTV, 't3');
 
 package main;
 
@@ -125,3 +127,8 @@ $object->ht_render($stash);
 # check order of rendering
 is_deeply($stash, { w => 'o0,o1,o2,o3,o4,o5,o6,o7,o8,o9,o10,' });
 
+package T5;
+use base 'HTML::Tested';
+
+package main;
+is(T5->ht_find_widget("sss"), undef);

@@ -17,5 +17,6 @@ WriteMakefile(
 		     'Crypt::CBC' => '',
 		     'Crypt::Blowfish' => '',
 		     'Digest::CRC' => '',
+		     'File::Slurp' => '',
                     },
 );

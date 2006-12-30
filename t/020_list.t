@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 23;
+use Test::More tests => 25;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -9,16 +9,17 @@ use HTML::Tested::Test::Request;
 BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); }; };
 
 BEGIN { use_ok('HTML::Tested::List'); 
+	use_ok('HTML::Tested', "HTV", "HT"); 
 	use_ok('HTML::Tested::Test'); 
 }
 
 package L;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'LR');
+__PACKAGE__->ht_add_widget(::HT."::List", 'l1', 'LR');
 
 package LR;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_marked_value('v1');
+__PACKAGE__->ht_add_widget(::HTV."::Marked", 'v1');
 
 sub make_test_array {
 	my $class = shift;
@@ -53,6 +54,9 @@ is($res->l1->[1]->v1, 'b');
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 		{ l1 => [ { v1 => 'a' }, 
 				{ v1 => 'b' } ] }) ], []);
+
+eval { HTML::Tested::Test->check_stash(ref($object), $stash, { l1 => "" }) };
+like($@, qr/l1 should be ARRAY reference/);
 
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 			{ l1 => [ { }, { } ] }) ], []);
@@ -94,11 +98,11 @@ is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
 
 package NL;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'NLR');
+__PACKAGE__->ht_add_widget(::HT."::List", 'l1', 'NLR');
 
 package NLR;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l2', 'LR');
+__PACKAGE__->ht_add_widget(::HT."::List", 'l2', 'LR');
 
 package main;
 
@@ -126,12 +130,12 @@ is(@{ $blessed->l1->[1]->l2 }, 2);
 
 package L2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('l1', 'LR2');
+__PACKAGE__->ht_add_widget(::HT."::List", 'l1', 'LR2');
 
 package LR2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_marked_value('v1');
-__PACKAGE__->make_tested_value('ht_id');
+__PACKAGE__->ht_add_widget(::HTV."::Marked", 'v1');
+__PACKAGE__->ht_add_widget(::HTV, 'ht_id');
 
 package main;
 
@@ -149,11 +153,11 @@ is_deeply($res, $tree) or diag(Dumper($res));
 
 package X;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_list('department_list', 'X2');
+__PACKAGE__->ht_add_widget(::HT."::List", 'department_list', 'X2');
 
 package X2;
 use base 'HTML::Tested';
-__PACKAGE__->make_tested_value($_) for qw(building_dropdown office_edit);
+__PACKAGE__->ht_add_widget(::HTV, $_) for qw(building_dropdown office_edit);
 
 package main;
 
