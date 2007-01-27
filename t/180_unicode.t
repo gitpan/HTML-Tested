@@ -2,9 +2,11 @@ use strict;
 use warnings FATAL => 'all';
 use Encode;
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 
-BEGIN { use_ok('HTML::Tested', 'HTV'); }
+BEGIN { use_ok('HTML::Tested', 'HTV');
+	use_ok('HTML::Tested::Value::Marked');
+}
 
 package T;
 use base 'HTML::Tested';

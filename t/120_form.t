@@ -1,10 +1,13 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 24;
+use Test::More tests => 27;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV HT)); 
+	use_ok('HTML::Tested::Value::Form');
+	use_ok('HTML::Tested::Value::EditBox');
+	use_ok('HTML::Tested::List');
 }
 
 package T;

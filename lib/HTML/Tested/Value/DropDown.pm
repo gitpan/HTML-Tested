@@ -2,14 +2,11 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Value::DropDown;
-use base 'HTML::Tested::Value';
-use HTML::Entities;
+use base 'HTML::Tested::Value::Array';
 
-sub encode_value {
-	my ($self, $val) = @_;
-	return [ map { [ 
-		encode_entities($_->[0]), encode_entities($_->[1]), $_->[2]
-	] } @$val ];
+sub transform_value {
+	my ($self, $caller, $val) = @_;
+	return [ map { $self->SUPER::transform_value($caller, $_) } @$val ];
 }
 
 sub value_to_string {

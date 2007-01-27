@@ -4,7 +4,7 @@ use warnings FATAL => 'all';
 package HTML::Tested::Value::Tree;
 use base 'HTML::Tested::Value';
 
-sub encode_value { return $_[1]; }
+sub transform_value { return $_[2]; }
 
 sub _render_from_selection_tree {
 	my ($self, $context, $nodes, $sel_tree, $ident) = @_;

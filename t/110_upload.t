@@ -1,14 +1,16 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 18;
+use Test::More tests => 19;
 use Data::Dumper;
 use File::Temp qw(tempdir);
 use File::Slurp;
+use File::Spec;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test::Request');
 	use_ok('HTML::Tested::Test');
+	use_ok('HTML::Tested::Value::Upload');
 }
 
 package T;
@@ -26,7 +28,8 @@ is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <input type="file" id="v" name="v" />
 ENDS
 
-my $td = tempdir("/tmp/pltest_110_up_XXXXXX", CLEANUP => 1);
+my $td = tempdir(File::Spec->catdir(File::Spec->tmpdir, "plt_110_up_XXXXXX")
+					, CLEANUP => 1);
 write_file("$td/c.txt", "Hello\nworld\n");
 
 my $req = HTML::Tested::Test::Request->new;

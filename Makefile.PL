@@ -18,5 +18,8 @@ WriteMakefile(
 		     'Crypt::Blowfish' => '',
 		     'Digest::CRC' => '',
 		     'File::Slurp' => '',
+		     'DateTime' => '',
+		     'DateTime::Format::Strptime' => '',
+		     'Data::Dumper' => '',
                     },
 );

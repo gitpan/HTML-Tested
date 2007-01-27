@@ -11,7 +11,7 @@ use HTML::Tested::Seal;
 use Data::Dumper;
 use File::Basename qw(basename);
 
-__PACKAGE__->mk_accessors(qw(_param _pnotes _uploads));
+__PACKAGE__->mk_accessors(qw(_param _pnotes _uploads _dir_config));
 
 sub server_root_relative {
 	return $_[1];
@@ -26,7 +26,15 @@ sub param {
 }
 
 sub dir_config {
-	return '';
+	my ($self, $name, $val) = @_;
+	my $dc = $self->_dir_config;
+	if (!$dc) {
+		$dc = {};
+		$self->_dir_config($dc);
+	}
+	return $dc->{$name} if (@_ < 3);
+	$dc->{$name} = $val if defined($val);
+	delete $dc->{$name} if !defined($val);
 }
 
 sub set_params {

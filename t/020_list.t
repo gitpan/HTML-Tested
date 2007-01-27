@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 25;
+use Test::More tests => 27;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -11,6 +11,8 @@ BEGIN { $SIG{__DIE__} = sub { confess("# " . $_[0]); }; };
 BEGIN { use_ok('HTML::Tested::List'); 
 	use_ok('HTML::Tested', "HTV", "HT"); 
 	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Value::Marked'); 
+	use_ok('HTML::Tested::List'); 
 }
 
 package L;

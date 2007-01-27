@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.21;
+our $VERSION = 0.22;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -90,6 +90,8 @@ will have default value "b".
 sub ht_add_widget {
 	my ($class1, $widget_class, $name, @args) = @_;
 	$class1->mk_accessors($name);
+
+	# The following will be simplified once deprecation is over...
 	my $res = $widget_class->new($class1, $name, @args);
 
 	# to avoid inheritance troubles...
@@ -220,42 +222,17 @@ sub ht_validate {
 	return @res;
 }
 
-# All of the following is deprecated
-our $Deprecated = 5;
-sub register_tested_widget {
-	my ($class, $widget_name, $widget_class) = @_;
-	no strict 'refs';
-	*{ "$class\::make_tested_$widget_name" } = sub {
-		local $Carp::CarpLevel = 1;
-		carp("# make_tested_$widget_name is deprecated. Use ht_add_widget "
-				. "with $widget_class directly. "
-				. "Hint: you can import HT shortcut "
-				. "for HTML::Tested. "
-				. " Please also use the relevant class."
-				. " Warning no $Deprecated")
-			if $Deprecated > 0;
-		$Deprecated--;
-		shift()->ht_add_widget($widget_class, @_);
-	};
+=head2 $root->ht_make_query_string($uri, @widget_names)
+
+Makes query string from $uri and widget values.
+
+=cut
+sub ht_make_query_string {
+	my ($self, $uri, @widget_names) = @_;
+	return "$uri?" . join("&", map {
+		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_)
+	} @widget_names);
 }
-
-
-use HTML::Tested::Value;
-use HTML::Tested::List;
-__PACKAGE__->register_tested_widget('value', 'HTML::Tested::Value');
-__PACKAGE__->register_tested_widget('list', 'HTML::Tested::List');
-
-{
-my %vals = qw(marked_value Marked edit_box EditBox textarea TextArea
-		password_box PasswordBox dropdown DropDown checkbox CheckBox
-		link Link upload Upload form Form submit Submit
-		hidden Hidden radio Radio tree Tree);
-
-while (my ($n, $v) = each %vals) {
-	eval "use HTML::Tested::Value::$v";
-	confess "Error using HTML::Tested::Value::$v: $@" if $@;
-	__PACKAGE__->register_tested_widget($n, "HTML::Tested::Value::$v");
-} }
 
 1;
 

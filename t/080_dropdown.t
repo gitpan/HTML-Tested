@@ -1,11 +1,12 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 9;
+use Test::More tests => 10;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', "HTV"); 
-	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Test');
+	use_ok('HTML::Tested::Value::DropDown');
 }
 
 package T;

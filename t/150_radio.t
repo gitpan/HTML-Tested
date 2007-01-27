@@ -1,12 +1,14 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 19;
+use Test::More tests => 21;
 use Data::Dumper;
 use Carp;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Value::Radio');
+	use_ok('HTML::Tested::List');
 }
 
 my $_id = 1;

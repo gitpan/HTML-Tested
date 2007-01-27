@@ -1,12 +1,14 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 50;
+use Test::More tests => 52;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
 	use_ok('HTML::Tested::Test');
 	use_ok('HTML::Tested::Test::Request');
+	use_ok('HTML::Tested::Value::Hidden');
+	use_ok('HTML::Tested::Value::Link');
 }
 
 package T;
@@ -181,6 +183,7 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object),
 
 # The caption should not be encrypted.
 $object->ht_set_widget_option('v', 'caption', undef);
+$object->ht_find_widget('v')->options->{0} = { isnt_sealed => 1 };
 $object->v([ 'moo', 'goo', 'boo' ]);
 $stash = {};
 $object->ht_render($stash);

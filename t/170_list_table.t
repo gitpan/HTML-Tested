@@ -1,10 +1,11 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested::List'); 
+	use_ok('HTML::Tested::Value');
 }
 
 package LR;

@@ -1,11 +1,13 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 4;
+use Test::More tests => 6;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested::List::Pager');
 	use_ok('HTML::Tested', "HTV");
+	use_ok('HTML::Tested::Value::Marked');
+	use_ok('HTML::Tested::List');
 }
 
 my $id = 1;

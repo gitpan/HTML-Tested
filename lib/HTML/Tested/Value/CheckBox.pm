@@ -2,13 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Value::CheckBox;
-use base 'HTML::Tested::Value';
-use HTML::Entities;
-
-sub encode_value {
-	my ($self, $val) = @_;
-	return [ encode_entities($val->[0]), $val->[1] ];
-}
+use base 'HTML::Tested::Value::Array';
 
 sub value_to_string {
 	my ($self, $name, $val) = @_;

@@ -1,12 +1,14 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
 BEGIN { use_ok('HTML::Tested', 'HT'); 
 	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Value'); 
+	use_ok('HTML::Tested::Value::Marked'); 
 }
 
 package T;

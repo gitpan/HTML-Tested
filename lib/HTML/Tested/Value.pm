@@ -18,6 +18,16 @@ package HTML::Tested::Value;
 use HTML::Entities;
 use HTML::Tested::Seal;
 use Carp;
+use Data::Dumper;
+
+sub setup_datetime_option {
+	my ($self, $dto, $opts) = @_;
+	$opts ||= $self->options;
+	eval "use DateTime::Format::Strptime";
+	confess "Unable to use DateTime::Format::Strptime: $@" if $@;
+	$dto = { pattern => $dto } unless ref($dto);
+	$opts->{is_datetime} = DateTime::Format::Strptime->new($dto);
+}
 
 sub new {
 	my ($class, $parent, $name, %opts) = @_;
@@ -25,17 +35,34 @@ sub new {
 			, constraints => [], validators => [] }, $class);
 	my $cs = $opts{constraints} || [];
 	$self->push_constraint($_) for @$cs;
+
+	my $dto = $self->options->{is_datetime};
+	$self->setup_datetime_option($dto) if $dto;
 	return $self;
 }
 
 =head2 $widget->name
 
-Returns name of the widget.
+Returns the name of the widget.
 
 =cut
 sub name { return shift()->{name}; }
+
+=head2 $widget->options
+
+Returns hash of options assigned to this widget. See OPTIONS section for
+description of available options.
+
+=cut
 sub options { return shift()->{_options}; }
 
+=head2 $widget->value_to_string($name, $val)
+
+This function is called from C<render> to return final string which will be
+rendered into rendered into stash. For HTML::Tested::Value it simply returns
+$val.
+
+=cut
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	return $val;
@@ -43,7 +70,8 @@ sub value_to_string {
 
 sub encode_value {
 	my ($self, $val) = @_;
-	die "Non scalar value $val" if ref($val);
+	confess ref($self) . "->" . $self->name . ": Non scalar value $val\n"
+		. Dumper($val) if ref($val);
 	return encode_entities($val, '<>&"');
 }
 
@@ -71,13 +99,34 @@ sub get_value {
 
 =head2 $widget->seal_value($value)
 
-It is called from $widget->render to seal the value before putting it to stash.
-See HTML::Tested::Seal for sealing functionality.
+If C<is_sealed> option is used, this function is called from $widget->render to
+seal the value before putting it to stash.  See HTML::Tested::Seal for sealing
+description.
 
 =cut
 sub seal_value {
 	my ($self, $val) = @_;
 	return HTML::Tested::Seal->instance->encrypt($val);
+}
+
+sub transform_value {
+	my ($self, $caller, $val) = @_;
+	my $n = $self->name;
+	my $dtfs = $caller->ht_get_widget_option($n, "is_datetime");
+	$val = $dtfs->format_datetime($val) if ($val && $dtfs);
+
+	$val = $self->seal_value($val, $caller)
+		if $caller->ht_get_widget_option($n, "is_sealed");
+
+	$val = $self->encode_value($val, $caller)
+		unless $caller->ht_get_widget_option($n, "is_trusted");
+	return $val;
+}
+
+sub prepare_value {
+	my ($self, $caller, $id) = @_;
+	my $val = $self->get_value($caller, $id);
+	return $self->transform_value($caller, $val);
 }
 
 =head2 $widget->render($caller, $stash, $id)
@@ -91,14 +140,7 @@ sub render {
 	my $res = '';
 	my $n = $self->name;
 	goto OUT if $caller->ht_get_widget_option($n, "is_disabled");
-
-	my $val = $self->get_value($caller, $id);
-	$val = $self->seal_value($val, $caller)
-		if $caller->ht_get_widget_option($n, "is_sealed");
-
-	$val = $self->encode_value($val, $caller)
-		unless $caller->ht_get_widget_option($n, "is_trusted");
-
+	my $val = $self->prepare_value($caller, $id);
 	$res = $self->value_to_string($id, $val, $caller);
 OUT:
 	$stash->{$n} = $res;
@@ -166,9 +208,11 @@ widgets aggregating other widgets (such as C<HTML::Tested::List>).
 =cut
 sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
-	$root->{ $self->name } = (
-		$self->options->{"is_sealed"}
-		? HTML::Tested::Seal->instance->decrypt($val) : $val);
+	$val = HTML::Tested::Seal->instance->decrypt($val)
+			if $self->options->{"is_sealed"};
+	my $dtfs = $self->options->{"is_datetime"};
+	$val = $dtfs->parse_datetime($val) if $dtfs;
+	$root->{ $self->name } = $val;
 }
 
 1;

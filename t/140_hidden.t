@@ -1,11 +1,12 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV)); 
 	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Value::Hidden'); 
 }
 
 package T;
