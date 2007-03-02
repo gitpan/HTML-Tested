@@ -56,11 +56,13 @@ description of available options.
 =cut
 sub options { return shift()->{_options}; }
 
-=head2 $widget->value_to_string($name, $val)
+=head2 $widget->value_to_string($name, $val, $caller, $stash)
 
 This function is called from C<render> to return final string which will be
-rendered into rendered into stash. For HTML::Tested::Value it simply returns
-$val.
+rendered into stash. For HTML::Tested::Value it simply returns $val.
+
+C<$caller> is the object calling this function. C<$stash> is read-only hash of
+the values accummulated so far.
 
 =cut
 sub value_to_string {
@@ -68,6 +70,11 @@ sub value_to_string {
 	return $val;
 }
 
+=head2 $widget->encode_value($val)
+
+Uses HTML::Entities to encode $val.
+
+=cut
 sub encode_value {
 	my ($self, $val) = @_;
 	confess ref($self) . "->" . $self->name . ": Non scalar value $val\n"
@@ -97,16 +104,25 @@ sub get_value {
 	return defined($val) ? $val : $self->get_default_value($caller, $id);
 }
 
-=head2 $widget->seal_value($value)
+=head2 $widget->seal_value($value, $caller)
 
 If C<is_sealed> option is used, this function is called from $widget->render to
 seal the value before putting it to stash.  See HTML::Tested::Seal for sealing
 description.
 
+This function maintains cache of sealed values in caller. Thus promising that
+the same value will map to the same id during request.
+
 =cut
 sub seal_value {
-	my ($self, $val) = @_;
-	return HTML::Tested::Seal->instance->encrypt($val);
+	my ($self, $val, $caller) = @_;
+	my $cache = $caller->{__ht_seal_cache} || {};
+	$caller->{__ht_seal_cache} = $cache unless %$cache;
+	my $res = $cache->{$val};
+	return $res if defined($res);
+	$res = HTML::Tested::Seal->instance->encrypt($val);
+	$cache->{$val} = $res;
+	return $res;
 }
 
 sub transform_value {
@@ -141,7 +157,7 @@ sub render {
 	my $n = $self->name;
 	goto OUT if $caller->ht_get_widget_option($n, "is_disabled");
 	my $val = $self->prepare_value($caller, $id);
-	$res = $self->value_to_string($id, $val, $caller);
+	$res = $self->value_to_string($id, $val, $caller, $stash);
 OUT:
 	$stash->{$n} = $res;
 }

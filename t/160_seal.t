@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 52;
+use Test::More tests => 53;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -60,10 +60,14 @@ is_deeply($stash, { v => 'hello' }) or diag(Dumper($stash));
 
 $stash = {};
 $object->ht_set_widget_option("v", "is_sealed", 1);
+$object->ht_add_widget('HTML::Tested::Value', 'b', is_sealed => 1);
+$object->b($object->v);
+
 $object->ht_render($stash);
 ok(exists $stash->{v});
 isnt($stash->{v}, 'hello');
 is($s->decrypt($stash->{v}), 'hello');
+is($stash->{v}, $stash->{b});
 
 my $r = HTML::Tested::Test::Request->new({ _param => { v => $stash->{v} } });
 $res = T->ht_convert_request_to_tree($r);
@@ -247,4 +251,4 @@ $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b' });
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
-		$stash, { HT_SEALED_v => 'b' }) ], [ "v wasn't sealed" ]);
+		$stash, { HT_SEALED_v => 'b' }) ], [ "v wasn't sealed b" ]);

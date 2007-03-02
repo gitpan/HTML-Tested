@@ -23,11 +23,11 @@ sub _replace_sealed {
 sub _handle_sealed {
 	my ($class, $e_root, $name, $e_val, $r_val, $err) = @_;
 	if ($e_root->{"__HT_SEALED__$name"}) {
-		my $orig_e_val = $e_val;
+		my $orig_r_val = $r_val;
 		$e_val = $class->_replace_sealed($e_val);
 		$r_val = $class->_replace_sealed($r_val);
-
-		push @$err, "$name wasn't sealed" if ($orig_e_val eq $e_val);
+		push @$err, "$name wasn't sealed $r_val"
+			if ($orig_r_val eq $r_val);
 	} elsif ($e_root->ht_get_widget_option($name, "is_sealed")) {
 		push @$err, "HT_SEALED was not defined on $name";
 	}

@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Data::Dumper;
 use HTML::Tested::Test;
 
@@ -61,13 +61,16 @@ use base 'HTML::Tested';
 __PACKAGE__->ht_add_widget(::HTV."::Link", 'v'
 		, href_format => 'hello?s=%s&id=%s'
 		, caption => "H", 1 => { is_sealed => 1 });
+__PACKAGE__->ht_add_widget(::HTV, s => is_sealed => 1);
 
 package main;
-$object = T4->new({ v => [ 'b', 12 ] });
+$object = T4->new({ v => [ 'b', 12 ], s => 12 });
 
 $stash = {};
 $object->ht_render($stash);
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
-		{ HT_SEALED_v => [ b => 12 ], }) ], [])
+		{ HT_SEALED_v => [ b => 12 ], HT_SEALED_s => 12 }) ], [])
 	or diag(Dumper($stash));
+my $s = $stash->{s};
+like($stash->{v}, qr/$s/);
 

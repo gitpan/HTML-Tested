@@ -32,9 +32,9 @@ sub transform_value {
 }
 
 sub seal_value {
-	my ($self, $val) = @_;
+	my ($self, $val, $caller) = @_;
 	return $self->options->{isnt_sealed} ? $val
-			: $self->SUPER::seal_value($val);
+			: $self->SUPER::seal_value($val, $caller);
 }
 
 1;

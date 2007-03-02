@@ -21,5 +21,6 @@ WriteMakefile(
 		     'DateTime' => '',
 		     'DateTime::Format::Strptime' => '',
 		     'Data::Dumper' => '',
+		     'Template' => ''
                     },
 );

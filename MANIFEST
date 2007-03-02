@@ -28,6 +28,7 @@ lib/HTML/Tested/Value/Submit.pm
 lib/HTML/Tested/Value/Hidden.pm
 lib/HTML/Tested/Value/Radio.pm
 lib/HTML/Tested/Value/Form.pm
+lib/HTML/Tested/Value/Snippet.pm
 t/001_load.t
 t/010_value.t
 t/020_list.t
@@ -48,5 +49,6 @@ t/160_seal.t
 t/170_list_table.t
 t/180_unicode.t
 t/190_datetime.t
+t/200_snippet.t
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

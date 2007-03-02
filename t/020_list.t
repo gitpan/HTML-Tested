@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -42,8 +42,9 @@ is_deeply($stash, { l1 => [ { v1 => '<!-- l1__1__v1 --> a' },
 is($object->l1_containee, 'LR');
 
 $object->l1(undef);
-$object->l1_containee_do(qw(make_test_array a b));
-is_deeply($object->l1, [ map { LR->new({ v1 => $_ }) } qw(a b) ]);
+my $exp = [ map { LR->new({ v1 => $_ }) } qw(a b) ];
+is_deeply($object->l1_containee_do(qw(make_test_array a b)), $exp);
+is_deeply($object->l1, $exp);
 
 my $req = HTML::Tested::Test::Request->new({ _param => {
 		l1__2__v1 => 'b', l1__1__v1 => 'a', } });
