@@ -7,6 +7,8 @@ use Crypt::CBC;
 use Digest::CRC qw(crc32);
 use Carp;
 
+our $Cache;
+
 sub _new_instance {
 	my ($class, $key) = @_;
 	my $self = bless({}, $class);
@@ -19,8 +21,12 @@ sub _new_instance {
 
 sub encrypt {
 	my ($self, $data) = @_;
+	my $res = $Cache ? $Cache->{$data} : undef;
+	return $res if defined($res);
 	my $c = crc32($data);
-	return $self->{_cipher}->encrypt_hex(pack("La*", $c, $data));
+	$res = $self->{_cipher}->encrypt_hex(pack("La*", $c, $data));
+	$Cache->{$data} = $res if $Cache;
+	return $res;
 }
 
 sub decrypt {

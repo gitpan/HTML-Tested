@@ -67,6 +67,7 @@ package main;
 $object = T4->new({ v => [ 'b', 12 ], s => 12 });
 
 $stash = {};
+$object->ht_enable_seal_cache;
 $object->ht_render($stash);
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 		{ HT_SEALED_v => [ b => 12 ], HT_SEALED_s => 12 }) ], [])

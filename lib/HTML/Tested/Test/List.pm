@@ -3,6 +3,17 @@ use warnings FATAL => 'all';
 
 package HTML::Tested::Test::List;
 use Carp;
+use Math::Combinatorics;
+
+sub _comp_stashes {
+	my ($class, $er_arr, $r_arr, $e_arr) = @_;
+	my @err;
+	for (my $i = 0; $i < @$r_arr || $i < @$e_arr; $i++) {
+		push @err, HTML::Tested::Test->compare_stashes(
+				$er_arr->[$i], $r_arr->[$i], $e_arr->[$i]);
+	}
+	return @err;
+}
 
 sub check_stash {
 	my ($class, $e_root, $name, $e_stash, $r_stash) = @_;
@@ -12,14 +23,15 @@ sub check_stash {
 	my $e_arr = $e_stash->{$name};
 	my $r_arr = HTML::Tested::Test::Ensure_Value_To_Check(
 			$r_stash, $name, $e_arr, \@err);
-	goto OUT unless defined($r_arr);
+	return @err if (!defined($r_arr) || @err);
+	return $class->_comp_stashes($e_root->$name, $r_arr, $e_arr)
+		unless $e_root->{"__HT_UNSORTED__$name"};
 
-	for (my $i = 0; $i < @$r_arr || $i < @$e_arr; $i++) {
-		push @err, HTML::Tested::Test->compare_stashes(
-				$e_root->$name->[$i],
-				$r_arr->[$i], $e_arr->[$i]);
+	my @rrs = permute(@$r_arr);
+	for (my $i = 0; $i < @rrs; $i++) {
+		@err = $class->_comp_stashes($e_root->$name, $rrs[$i], $e_arr);
+		return () if !@err;
 	}
-OUT:
 	return @err;
 };
 
@@ -41,10 +53,8 @@ sub bless_from_tree {
 	my $target = $w_class->containee;
 	confess $w_class->name . " should be ARRAY reference"
 		unless ($p && ref($p) eq 'ARRAY');
-	return [ map {
-		HTML::Tested::Test->bless_from_tree_for_test($target
-				, $_, $err);
-	} @$p ];
+	return [ map { HTML::Tested::Test->bless_from_tree_for_test($target
+				, $_, $err); } @$p ];
 }
 
 sub _convert_to_param {

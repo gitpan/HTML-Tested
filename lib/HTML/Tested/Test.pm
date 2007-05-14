@@ -74,10 +74,11 @@ sub bless_unknown_widget {
 sub bless_from_tree_for_test {
 	my ($class, $target, $expected, $err) = @_;
 	my $res = {};
-	my (@disabled, %e, @reverted, @sealed);
+	my (@disabled, %e, @reverted, @sealed, @unsorted);
 	while (my ($n, $v) = each %$expected) {
 		push @reverted, $n if ($n =~ s/^HT_NO_//);
 		push @sealed, $n if ($n =~ s/^HT_SEALED_//);
+		push @unsorted, $n if ($n =~ s/^HT_UNSORTED_//);
 		$e{$n} = $v;
 	}
 	$expected = \%e;
@@ -97,6 +98,7 @@ sub bless_from_tree_for_test {
 	$e_root->ht_set_widget_option($_, "is_disabled", 1) for @disabled;
 	$e_root->{"__HT_REVERTED__$_"} = 1 for @reverted;
 	$e_root->{"__HT_SEALED__$_"} = 1 for @sealed;
+	$e_root->{"__HT_UNSORTED__$_"} = 1 for @unsorted;
 	return $e_root;
 }
 

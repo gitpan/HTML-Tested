@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 28;
+use Test::More tests => 34;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -173,3 +173,35 @@ $tree = X->ht_convert_request_to_tree($req);
 is_deeply($tree->department_list, [ {
 	office_edit => 2, building_dropdown => 1
 } ]) or diag(Dumper($tree));
+
+package X2I;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, a => is_sealed => 1);
+__PACKAGE__->ht_add_widget(::HTV, 'b');
+
+package X2;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HT."::List", l => 'X2I');
+
+package main;
+HTML::Tested::Seal->instance('hrhr');
+$object = X2->new({ l => [ map { X2I->new({ a => $_, b => ($_ + 1) }) }
+					(1 .. 2) ] });
+$stash = {};
+$object->ht_render($stash);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ l => [ { b => 2 }, { HT_SEALED_a => 2 } ] }) ], []);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ l => [ { HT_SEALED_a => 1 }, { b => 3 } ] }) ], []);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ l => [ { HT_SEALED_a => 1 }, { b => 4 } ] }) ], [
+			'Mismatch at b: got "3", expected "4"' ]);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ HT_UNSORTED_l => [ { HT_SEALED_a => 1 }, { b => 3 } ] }) ]
+			, []);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ HT_UNSORTED_l => [ { b => 3 }, { HT_SEALED_a => 1 } ] }) ]
+			, []);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
+		{ HT_UNSORTED_l => [ { b => 4 }, { HT_SEALED_a => 1 } ] }) ]
+			, [ 'Mismatch at b: got "3", expected "4"' ]);

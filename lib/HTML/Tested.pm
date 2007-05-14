@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.23;
+our $VERSION = 0.24;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -74,6 +74,7 @@ use constant HT => 'HTML::Tested';
 use constant HTV => 'HTML::Tested::Value';
 
 __PACKAGE__->mk_classdata('Widgets_List', []);
+__PACKAGE__->mk_classdata('Is_Seal_Cache_Enabled');
 
 =head1 METHODS
 
@@ -109,11 +110,13 @@ C<stash> should be hash reference.
 =cut
 sub ht_render {
 	my ($self, $stash, $parent_name) = @_;
+	$HTML::Tested::Seal::Cache = {} if $self->Is_Seal_Cache_Enabled;
 	for my $v (@{ $self->Widgets_List }) {
 		my $n = $v->name;
 		my $id = $parent_name ? $parent_name . "__$n" : $n;
 		$v->render($self, $stash, $id);
 	}
+	$HTML::Tested::Seal::Cache = undef if $self->Is_Seal_Cache_Enabled;
 }
 
 =head2 ht_find_widget($widget_name)
@@ -217,7 +220,7 @@ sub ht_validate {
 	my @res;
 	for my $v (@{ $self->Widgets_List }) {
 		my $n = $v->name;
-		push @res, map { [ $n, @$_ ] } $v->validate($self->$n);
+		push @res, map { [ $n, @$_ ] } $v->validate($self->$n, $self);
 	}
 	return @res;
 }
@@ -233,6 +236,9 @@ sub ht_make_query_string {
 		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_)
 	} @widget_names);
 }
+
+sub ht_enable_seal_cache { shift()->Is_Seal_Cache_Enabled(1); }
+sub ht_disable_seal_cache { shift()->Is_Seal_Cache_Enabled(undef); }
 
 1;
 

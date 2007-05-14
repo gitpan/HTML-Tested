@@ -21,6 +21,7 @@ WriteMakefile(
 		     'DateTime' => '',
 		     'DateTime::Format::Strptime' => '',
 		     'Data::Dumper' => '',
-		     'Template' => ''
+		     'Template' => '',
+		     'Math::Combinatorics' => ''
                     },
 );

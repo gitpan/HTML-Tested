@@ -116,13 +116,7 @@ the same value will map to the same id during request.
 =cut
 sub seal_value {
 	my ($self, $val, $caller) = @_;
-	my $cache = $caller->{__ht_seal_cache} || {};
-	$caller->{__ht_seal_cache} = $cache unless %$cache;
-	my $res = $cache->{$val};
-	return $res if defined($res);
-	$res = HTML::Tested::Seal->instance->encrypt($val);
-	$cache->{$val} = $res;
-	return $res;
+	return HTML::Tested::Seal->instance->encrypt($val);
 }
 
 sub transform_value {
@@ -199,14 +193,23 @@ sub push_constraint {
 	push @{ $self->{validators} }, $func if $func;
 }
 
-=head2 $widget->validate($value)
+=head2 $widget->validate($value, $caller)
 
-Validate value returning list of failed constraints in the format specified above.
+Validate value returning list of failed constraints in the format specified
+above.
+
 I.e. the C<$value> is "constraint-clean" when C<validate> returns empty list.
+
+Validate is disabled if C<no_validate> widget option is set.
 
 =cut
 sub validate {
-	my ($self, $val) = @_;;
+	my ($self, $val, $caller) = @_;
+	my $n = $self->name;
+	return () if $caller->ht_get_widget_option($n, "no_validate");
+	return ([ type => 'integer' ])
+		if ($caller->ht_get_widget_option($n, "is_integer")
+				&& $val !~ /^\d+$/);
 	my $vs = $self->{validators};
 	my @res;
 	for (my $i = 0; $i < @$vs; $i++) {

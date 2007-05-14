@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 27;
+use Test::More tests => 30;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV HT)); 
@@ -63,7 +63,7 @@ package main;
 
 $object = T3->new;
 $object->a('ff');
-is_deeply([ $object->ht_find_widget('a')->validate ]
+is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ]
 		, [ [ regexp => '^\d+$' ] ]);
 
 $object->a(undef);
@@ -114,18 +114,18 @@ package main;
 $object = T5->new;
 $stash = {};
 
-is_deeply([ $object->ht_find_widget('a')->validate ], []);
+is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ], []);
 $object->ht_find_widget('a')->push_constraint([ regexp => '^\d+$' ]);
-is_deeply([ $object->ht_find_widget('a')->validate ]
+is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ]
 		, [ [ regexp => '^\d+$' ] ]);
 $object->a(5);
-is_deeply([ $object->ht_find_widget('a')->validate(5) ], []);
+is_deeply([ $object->ht_find_widget('a')->validate(5, $object) ], []);
 
 $object->ht_find_widget('b')->push_constraint([ 'defined' => '' ]);
-is_deeply([ $object->ht_find_widget('b')->validate ]
+is_deeply([ $object->ht_find_widget('b')->validate(undef, $object) ]
 		, [ [ 'defined' => '' ] ]);
-is_deeply([ $object->ht_find_widget('b')->validate('') ], []);
-is_deeply([ $object->ht_find_widget('b')->validate(0) ], []);
+is_deeply([ $object->ht_find_widget('b')->validate('', $object) ], []);
+is_deeply([ $object->ht_find_widget('b')->validate(0, $object) ], []);
 
 $object->ht_render($stash);
 is_deeply($stash, { v => <<'ENDS'
@@ -147,9 +147,11 @@ __PACKAGE__->ht_add_widget(::HTV."::EditBox", 'a', constraints => [
 
 package main;
 
-is_deeply([ T6->ht_find_widget('a')->validate('a') ], [ [ regexp => 'b' ] ]);
-is_deeply([ T6->ht_find_widget('a')->validate('b') ], [ [ regexp => 'a' ] ]);
-is_deeply([ T6->ht_find_widget('a')->validate('ba') ], []);
+is_deeply([ T6->ht_find_widget('a')->validate('a', 'T6') ]
+		, [ [ regexp => 'b' ] ]);
+is_deeply([ T6->ht_find_widget('a')->validate('b', 'T6') ]
+		, [ [ regexp => 'a' ] ]);
+is_deeply([ T6->ht_find_widget('a')->validate('ba', 'T6') ], []);
 
 $object = T6->new;
 is_deeply([ $object->ht_validate ], [ [ a => regexp => 'a' ]
@@ -168,5 +170,20 @@ my $res = [ $object->ht_validate ];
 is_deeply($res, [ [ l1 => a => regexp => 'a' ] ]) or diag(Dumper($res));
 
 $object->l1->[0]->a("bab");
+is_deeply([ $object->ht_validate ], []);
+
+T6->ht_set_widget_option("a", "no_validate", 1);
+$object->l1->[0]->a("bb");
+is_deeply([ $object->ht_validate ], []);
+
+package T8;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, v => is_integer => 1);
+
+package main;
+$object = T8->new({ v => 'a' });
+is_deeply([ $object->ht_validate ], [ [ v => type => 'integer' ] ]);
+
+$object->v(12);
 is_deeply([ $object->ht_validate ], []);
 

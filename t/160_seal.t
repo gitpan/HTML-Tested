@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 53;
+use Test::More tests => 58;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -9,6 +9,7 @@ BEGIN { use_ok('HTML::Tested');
 	use_ok('HTML::Tested::Test::Request');
 	use_ok('HTML::Tested::Value::Hidden');
 	use_ok('HTML::Tested::Value::Link');
+	use_ok('HTML::Tested::List');
 }
 
 package T;
@@ -63,6 +64,7 @@ $object->ht_set_widget_option("v", "is_sealed", 1);
 $object->ht_add_widget('HTML::Tested::Value', 'b', is_sealed => 1);
 $object->b($object->v);
 
+$object->ht_enable_seal_cache;
 $object->ht_render($stash);
 ok(exists $stash->{v});
 isnt($stash->{v}, 'hello');
@@ -252,3 +254,28 @@ $object->ht_render($stash);
 is_deeply($stash, { v => 'b' });
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
 		$stash, { HT_SEALED_v => 'b' }) ], [ "v wasn't sealed b" ]);
+
+package LN;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('HTML::Tested::Value', 'b' => is_sealed => 1);
+
+package L;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('HTML::Tested::List', l => 'TU');
+__PACKAGE__->ht_add_widget('HTML::Tested::Value', 'v' => is_sealed => 1);
+__PACKAGE__->ht_enable_seal_cache;
+
+package main;
+
+$object = L->new({ v => 1, l => [ LN->new({ b => 1 }) ] });
+$object->ht_render($stash);
+is($stash->{v}, $stash->{l}->[0]->{b});
+
+$s2 = {};
+$object->ht_render($s2);
+isnt($s2->{v}, $stash->{v});
+is($s2->{v}, $s2->{l}->[0]->{b});
+
+L->ht_disable_seal_cache;
+$object->ht_render($s2);
+isnt($s2->{v}, $s2->{l}->[0]->{b});
