@@ -21,6 +21,7 @@ sub _new_instance {
 
 sub encrypt {
 	my ($self, $data) = @_;
+	confess "# No data to encrypt given!" unless defined($data);
 	my $res = $Cache ? $Cache->{$data} : undef;
 	return $res if defined($res);
 	my $c = crc32($data);

@@ -79,7 +79,7 @@ sub encode_value {
 	my ($self, $val) = @_;
 	confess ref($self) . "->" . $self->name . ": Non scalar value $val\n"
 		. Dumper($val) if ref($val);
-	return encode_entities($val, '<>&"');
+	return encode_entities($val, '<>&"' . "'");
 }
 
 sub get_default_value {

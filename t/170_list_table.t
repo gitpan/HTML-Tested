@@ -1,8 +1,9 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 8;
+use Test::More tests => 10;
 use Data::Dumper;
+use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::List'); 
 	use_ok('HTML::Tested::Value');
@@ -55,16 +56,14 @@ is_deeply($stash, { l1 => [ { v1 => '1a', v2 => '2a', v3 => '3a' },
 </tr>
 </table>
 ENDS
-}) 
-	or diag(Dumper($stash));
+}) or diag(Dumper($stash));
 
 bless $object, 'L2';
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { l1 => [ { v1 => '1a', v2 => '2a', v3 => '3a' }, 
 				{ v1 => '1b', v2 => '2b', v3 => '3b' } ]
-}) 
-	or diag(Dumper($stash));
+}) or diag(Dumper($stash));
 
 eval {
 package L3;
@@ -75,4 +74,36 @@ __PACKAGE__->ht_add_widget('HTML::Tested::List', 'l1', 'L2', render_table => 1);
 package main;
 like($@, qr/No columns found!/);
 
+package LR1;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget("HTML::Tested::Value", 'v3', column_title => '');
 
+package L4;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('HTML::Tested::List', 'l1'
+		, 'LR1', render_table => 1);
+
+package main;
+$object = L4->new({ l1 => [ map {
+	LR1->new({ v3 => "3$_" })
+} qw(a b) ] });
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { l1 => [ { v3 => '3a' }, { v3 => '3b' } ]
+	, l1_table => <<ENDS
+<table>
+<tr>
+<th></th>
+</tr>
+<tr>
+<td>3a</td>
+</tr>
+<tr>
+<td>3b</td>
+</tr>
+</table>
+ENDS
+}) or diag(Dumper($stash));
+
+eval { HTML::Tested::Test->check_stash('L4', $stash, { l1 => [ {} ] }); };
+like($@, qr/No v3 found/);

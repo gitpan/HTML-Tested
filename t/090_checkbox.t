@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 use Data::Dumper;
 use HTML::Tested::Test;
 
@@ -31,6 +31,12 @@ is_deeply($object->v, [ 1, 1 ]);
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <input type="checkbox" id="v" name="v" value="1" checked />
+ENDS
+
+$object->v->[0] = "1\"f'";
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<input type="checkbox" id="v" name="v" value="1&quot;f&#39;" checked />
 ENDS
 
 $object->v->[0] = '1&';

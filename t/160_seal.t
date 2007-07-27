@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 58;
+use Test::More tests => 59;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -31,6 +31,10 @@ is($s->decrypt("dskdskd"), undef);
 
 # And length is per 8 byte block
 is(length($v), length($s->encrypt("hello1")));
+
+# And we confess
+eval { $s->encrypt(undef); };
+like($@, qr/$0/);
 
 undef $HTML::Tested::Seal::_instance;
 my $s2 = HTML::Tested::Seal->instance('boo boo boo');

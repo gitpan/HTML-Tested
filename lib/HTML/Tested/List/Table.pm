@@ -3,6 +3,7 @@ use warnings FATAL => 'all';
 
 package HTML::Tested::List::Table;
 use Carp;
+use Data::Dumper;
 
 sub new { bless {}, shift(); }
 
@@ -12,8 +13,8 @@ sub init {
 	my (@cols, @names);
 	for my $w (@{ $c->Widgets_List }) {
 		my $n = $w->name;
-		my $ct = $c->ht_get_widget_option($n, "column_title")
-				or next;
+		my $ct = $c->ht_get_widget_option($n, "column_title");
+		next unless defined($ct);
 		push @cols, $ct;
 		push @names, $n;
 	}
@@ -33,7 +34,10 @@ sub render {
 	for my $r (@{ $stash->{ $ln } }) {
 		$res .= "</tr>\n<tr>\n";
 		for my $n (@$names) {
-			$res .= "<td>" . $r->{$n} . "</td>\n";
+			my $td = $r->{$n};
+			confess "# No $n found in " . Dumper($r)
+					unless defined($td);
+			$res .= "<td>$td</td>\n";
 		}
 	}
 

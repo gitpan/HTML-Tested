@@ -20,7 +20,7 @@ sub new {
 		*{ "$parent\::$name\_containee" } = sub { return $c; };
 		*{ "$parent\::$name\_containee_do" } = sub {
 			my ($self, $func, @args) = @_;
-			$self->$name($c->$func(@args));
+			return $self->$name($c->$func(@args));
 		};
 	};
 	
