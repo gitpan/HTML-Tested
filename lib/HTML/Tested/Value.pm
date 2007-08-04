@@ -219,6 +219,11 @@ sub validate {
 	return @res;
 }
 
+sub unseal_value {
+	my ($self, $val, $caller) = @_;
+	return HTML::Tested::Seal->instance->decrypt($val);
+}
+
 =head2 $widget->absorb_one_value($parent, $val, @path)
 
 Parses C<$val> and puts the result into C<$parent> object. C<@path> is used for
@@ -227,7 +232,7 @@ widgets aggregating other widgets (such as C<HTML::Tested::List>).
 =cut
 sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
-	$val = HTML::Tested::Seal->instance->decrypt($val)
+	$val = $self->unseal_value($val, $root)
 			if $self->options->{"is_sealed"};
 	my $dtfs = $self->options->{"is_datetime"};
 	$val = $dtfs->parse_datetime($val) if $dtfs;

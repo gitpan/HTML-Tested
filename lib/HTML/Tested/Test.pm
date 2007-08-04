@@ -2,8 +2,11 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Test;
+use base 'Exporter';
 use Data::Dumper;
 use Carp;
+
+our @EXPORT_OK = qw(Register_Widget_Tester);
 
 sub Stash_Mismatch {
 	my ($n, $res, $v) = @_;
@@ -119,10 +122,13 @@ sub check_text {
 	return shift()->do_comparison('compare_text_to_stash', @_);
 }
 
-sub register_widget_tester {
-	my ($class, $w_class, $t_class) = @_;
-	eval "use $t_class";
-	die "Cannot use $t_class: $@" if $@;
+=head2 Register_Widget_Tester($widget_class, $tester_class)
+
+Registers C<$tester_class> as tester for C<$widget_class>.
+
+=cut
+sub Register_Widget_Tester {
+	my ($w_class, $t_class) = @_;
 	no strict 'refs';
 	*{ "$w_class\::__ht_tester" } = sub { return $t_class; };
 }
@@ -148,13 +154,14 @@ sub convert_tree_to_param {
 	}
 }
 
-__PACKAGE__->register_widget_tester('HTML::Tested::Value', 
-		'HTML::Tested::Test::Value');
-__PACKAGE__->register_widget_tester('HTML::Tested::Value::Upload', 
-		'HTML::Tested::Test::Upload');
-__PACKAGE__->register_widget_tester('HTML::Tested::Value::Radio', 
-		'HTML::Tested::Test::Radio');
-__PACKAGE__->register_widget_tester('HTML::Tested::List'
-		, 'HTML::Tested::Test::List');
+my %_testers = qw(HTML::Tested::Value HTML::Tested::Test::Value
+	HTML::Tested::Value::Upload HTML::Tested::Test::Upload
+	HTML::Tested::Value::Radio HTML::Tested::Test::Radio
+	HTML::Tested::List HTML::Tested::Test::List);
+while (my ($n, $v) = each %_testers) {
+	eval "use $n; use $v;";
+	die "Unable to use $n or use $v" if $@;
+	Register_Widget_Tester($n, $v);
+}
 
 1;

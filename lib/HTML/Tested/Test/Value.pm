@@ -20,9 +20,24 @@ sub _replace_sealed {
 	return $val;
 }
 
-sub _handle_sealed {
+=head2 $class->is_marked_as_sealed($e_root, $name)
+
+Checks whether variable C<$name> was marked as HT_SEALED.
+
+=cut
+sub is_marked_as_sealed {
+	my ($class, $e_root, $name) = @_;
+	return $e_root->{"__HT_SEALED__$name"};
+}
+
+=head2 $class->handle_sealed($e_root, $name, $e_val, $r_val, $err)
+
+Is called to handle sealed value if needed.
+
+=cut
+sub handle_sealed {
 	my ($class, $e_root, $name, $e_val, $r_val, $err) = @_;
-	if ($e_root->{"__HT_SEALED__$name"}) {
+	if ($class->is_marked_as_sealed($e_root, $name)) {
 		my $orig_r_val = $r_val;
 		$e_val = $class->_replace_sealed($e_val);
 		$r_val = $class->_replace_sealed($r_val);
@@ -44,7 +59,7 @@ sub check_stash {
 			$r_stash, $name, $e_val, \@err);
 	goto OUT unless defined($r_val) || @err;
 
-	($e_val, $r_val) = $class->_handle_sealed($e_root, $name
+	($e_val, $r_val) = $class->handle_sealed($e_root, $name
 					, $e_val, $r_val, \@err);
 	goto OUT if ($r_val eq $e_val || @err);
 
@@ -61,8 +76,7 @@ sub bless_from_tree {
 sub _check_text_i {
 	my ($class, $e_root, $name, $v, $text) = @_;
 	my @ret;
-	($v, $text) = $class->_handle_sealed($e_root, $name, $v
-					     , $text, \@ret);
+	($v, $text) = $class->handle_sealed($e_root, $name, $v, $text, \@ret);
 
 	if ($e_root->{"__HT_REVERTED__$name"}) {
 		@ret = ("Unexpectedly found \"$v\" in \"$text\"")

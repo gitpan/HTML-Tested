@@ -1,12 +1,12 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 28;
+use Test::More tests => 37;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
 BEGIN { use_ok('HTML::Tested', 'HT'); 
-	use_ok('HTML::Tested::Test'); 
+	use_ok('HTML::Tested::Test', 'Register_Widget_Tester'); 
 	use_ok('HTML::Tested::Value'); 
 	use_ok('HTML::Tested::Value::Marked'); 
 }
@@ -108,7 +108,8 @@ is($object->ht_get_widget_option("v", "is_disabled"), undef);
 
 package T4;
 use base 'HTML::Tested';
-__PACKAGE__->ht_add_widget(::HT."::Value", 'v', is_trusted => 1, default_value => sub {
+__PACKAGE__->ht_add_widget(::HT."::Value", 'v', is_trusted => 1
+		, default_value => sub {
 	my ($self, $id, $caller) = @_;
 	return $self->name . ", $id, " . ref($caller);
 });
@@ -126,4 +127,69 @@ $object->v(undef);
 $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => 'v, v, T4' }) or diag(Dumper($stash));
+
+my (@_uv, @_sv);
+
+package TV;
+use base 'HTML::Tested::Value';
+
+sub seal_value {
+	my ($self, $val, $caller) = @_;
+	@_sv = ($val, $caller);
+	return $val;
+}
+
+sub unseal_value {
+	my ($self, $val, $caller) = @_;
+	@_uv = ($val, $caller);
+	return $val;
+}
+
+package T5;
+use base 'HTML::Tested';
+
+__PACKAGE__->ht_add_widget("TV", tv => is_sealed => 1);
+
+package main;
+
+$req = HTML::Tested::Test::Request->new({ _param => { tv => 'a' } });
+my $t5 = T5->ht_convert_request_to_tree($req);
+is($t5->tv, 'a');
+is($_uv[0], 'a');
+is($_uv[1], $t5);
+
+$stash = {};
+$t5->ht_render($stash);
+is_deeply($stash, { tv => 'a' });
+is_deeply(\@_uv, \@_sv);
+
+my @_e;
+my $_ms = 1;
+
+package TVT;
+use base 'HTML::Tested::Test::Value';
+
+sub is_marked_as_sealed {
+	my ($class, $e_root, $name) = @_;
+	return $_ms ? $class->SUPER::is_marked_as_sealed($e_root, $name) : 0;
+}
+
+sub handle_sealed {
+	my ($class, $e_root, $name, $e_val, $r_val, $err) = @_;
+	$class->SUPER::handle_sealed($e_root, $name, $e_val, $r_val, \@_e);
+}
+
+package main;
+Register_Widget_Tester('TV', 'TVT');
+
+HTML::Tested::Seal->instance('aaa');
+is_deeply([ HTML::Tested::Test->check_stash('T5', $stash, {
+		HT_SEALED_tv => 'a' }) ], []);
+is_deeply(\@_e, [ "tv wasn't sealed a" ]);
+
+$_ms = undef;
+@_e = ();
+is_deeply([ HTML::Tested::Test->check_stash('T5', $stash, {
+		HT_SEALED_tv => 'a' }) ], []);
+is_deeply(\@_e, [ 'HT_SEALED was not defined on tv' ]);
 
