@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested::Test::Value;
+use HTML::Tested::Test qw(Ensure_Value_To_Check Stash_Mismatch);
 
 my $_seal_prefix;
 
@@ -55,15 +56,14 @@ sub check_stash {
 	goto OUT unless exists($e_stash->{$name});
 
 	my $e_val = $e_stash->{$name};
-	my $r_val = HTML::Tested::Test::Ensure_Value_To_Check(
-			$r_stash, $name, $e_val, \@err);
-	goto OUT unless defined($r_val) || @err;
+	my $r_val = Ensure_Value_To_Check($r_stash, $name, $e_val, \@err);
+	goto OUT unless defined($r_val);
 
 	($e_val, $r_val) = $class->handle_sealed($e_root, $name
 					, $e_val, $r_val, \@err);
-	goto OUT if ($r_val eq $e_val || @err);
+	goto OUT if (@err || $r_val eq $e_val);
 
-	@err = HTML::Tested::Test::Stash_Mismatch($name, $r_val, $e_val);
+	@err = Stash_Mismatch($name, $r_val, $e_val);
 OUT:
 	return @err;
 }
@@ -75,6 +75,7 @@ sub bless_from_tree {
 
 sub _check_text_i {
 	my ($class, $e_root, $name, $v, $text) = @_;
+	return () unless defined($v);
 	my @ret;
 	($v, $text) = $class->handle_sealed($e_root, $name, $v, $text, \@ret);
 

@@ -50,11 +50,11 @@ $obj->ht_render($stash);
 is_deeply($stash, { e => '27.10.1976' });
 
 T2->ht_add_widget(::HTV, id => is_sealed => 1);
-$obj->id(555);
+$obj->id(555555);
 
 my $qs = $obj->ht_make_query_string("hello", "id", "e");
 like($qs, qr/^hello\?id/);
-unlike($qs, qr/555/);
+unlike($qs, qr/555555/);
 like($qs, qr/&e=27\.10\.1976/);
 
 
@@ -62,7 +62,7 @@ $r->parse_url($qs);
 isnt($r->param('id'), undef);
 
 $obj = T2->ht_convert_request_to_tree($r);
-is($obj->id, 555);
+is($obj->id, 555555);
 is($obj->e->year, '1976');
 
 is($r->dir_config("Moo"), undef);

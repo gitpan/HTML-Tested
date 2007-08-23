@@ -89,12 +89,15 @@ sub get_default_value {
 	return defined($res)
 			?  ref($res) eq 'CODE'
 				? $res->($self, $id, $caller) : $res
-			: '';
+			: $caller->ht_get_widget_option(
+				$self->name, "skip_undef") ? undef : '';
 }
 
 =head2 $widget->get_value($caller, $id)
 
-It is called from $widget->render to get the value to render.
+It is called from $widget->render to get the value to render. If the value
+is C<undef> C<get_default_value> will be used to get default value for the
+widget.
 
 =cut
 sub get_value {
@@ -136,6 +139,7 @@ sub transform_value {
 sub prepare_value {
 	my ($self, $caller, $id) = @_;
 	my $val = $self->get_value($caller, $id);
+	return undef unless defined($val);
 	return $self->transform_value($caller, $val);
 }
 
@@ -151,6 +155,7 @@ sub render {
 	my $n = $self->name;
 	goto OUT if $caller->ht_get_widget_option($n, "is_disabled");
 	my $val = $self->prepare_value($caller, $id);
+	return unless defined($val);
 	$res = $self->value_to_string($id, $val, $caller, $stash);
 OUT:
 	$stash->{$n} = $res;
@@ -241,9 +246,41 @@ sub absorb_one_value {
 
 1;
 
+=head1 OPTIONS
+
+Options can be used to customize widget behaviour. Each widget is free to
+define its own options. They can be set per class or per object using
+C<ht_set_widget_option>. The options can be retrieved using
+C<ht_get_widget_option>.
+
+C<HTML::Tested::Value> defines the following options:
+
+=over
+
+=item is_sealed
+
+The widget value is encrypted before rendering it. The value is decrypted from
+the request parameters in transparent fashion.
+
+=item is_disabled
+
+The widget is disabled: it is rendered as blank value.
+
+=item default_value
+
+Default value for the widget. It is rendered if current widget value is
+C<undef>.
+
+=item skip_undef
+
+Normally, if widget value is C<undef>, the widget is rendered as blank value.
+When this option is set the widget will not appear in the stash at all.
+
+=back
+
 =head1 AUTHOR
 
-	Boris Sukholitko (boriss@gmail.com)
+Boris Sukholitko (boriss@gmail.com)
 	
 =head1 COPYRIGHT
 

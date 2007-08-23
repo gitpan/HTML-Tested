@@ -1,11 +1,11 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 37;
+use Test::More tests => 45;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
-BEGIN { use_ok('HTML::Tested', 'HT'); 
+BEGIN { use_ok('HTML::Tested', 'HT', 'HTV'); 
 	use_ok('HTML::Tested::Test', 'Register_Widget_Tester'); 
 	use_ok('HTML::Tested::Value'); 
 	use_ok('HTML::Tested::Value::Marked'); 
@@ -193,3 +193,34 @@ is_deeply([ HTML::Tested::Test->check_stash('T5', $stash, {
 		HT_SEALED_tv => 'a' }) ], []);
 is_deeply(\@_e, [ 'HT_SEALED was not defined on tv' ]);
 
+package T6;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, uv => skip_undef => 1);
+
+package main;
+
+$object = T6->new;
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, {}) or diag(Dumper($stash));
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+	$stash, { uv => '' }) ], [ 'Mismatch at uv: got undef, expected ""' ]);
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+	$stash, { uv => undef }) ], []);
+
+$object->uv(1);
+$object->ht_render($stash);
+is_deeply($stash, { uv => 1 }) or diag(Dumper($stash));
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+	$stash, { uv => undef }) ], []);
+is_deeply([ HTML::Tested::Test->check_text(ref($object), 
+	"mooo", { uv => undef }) ], []);
+
+$object->ht_set_widget_option("uv", "is_sealed", 1);
+$object->uv(undef);
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, {}) or diag(Dumper($stash));
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+	$stash, { HT_SEALED_uv => '' }) ]
+		, [ 'Mismatch at uv: got undef, expected ""' ]);
