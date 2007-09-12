@@ -14,7 +14,7 @@ WriteMakefile(
 		     'Class::Accessor' => '',
 		     'HTML::Entities' => '',
 		     'Class::Singleton' => '',
-		     'Crypt::CBC' => '',
+		     'Crypt::CBC' => '2.22',
 		     'Crypt::Blowfish' => '',
 		     'Digest::CRC' => '',
 		     'File::Slurp' => '',

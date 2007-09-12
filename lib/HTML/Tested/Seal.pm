@@ -7,13 +7,13 @@ use Crypt::CBC;
 use Digest::CRC qw(crc32);
 use Carp;
 
-our $Cache;
-
 sub _new_instance {
 	my ($class, $key) = @_;
 	my $self = bless({}, $class);
 	confess "No key!" unless $key;
-	my $c = Crypt::CBC->new({ key => $key, cipher => 'Blowfish' });
+	my $c = Crypt::CBC->new(-key => $key, -cipher => 'Blowfish'
+			, -iv => Crypt::CBC->random_bytes(8)
+			, -header => 'randomiv');
 	confess "No cipher!" unless $c;
 	$self->{_cipher} = $c;
 	return $self;
@@ -22,12 +22,8 @@ sub _new_instance {
 sub encrypt {
 	my ($self, $data) = @_;
 	confess "# No data to encrypt given!" unless defined($data);
-	my $res = $Cache ? $Cache->{$data} : undef;
-	return $res if defined($res);
 	my $c = crc32($data);
-	$res = $self->{_cipher}->encrypt_hex(pack("La*", $c, $data));
-	$Cache->{$data} = $res if $Cache;
-	return $res;
+	return $self->{_cipher}->encrypt_hex(pack("La*", $c, $data));
 }
 
 sub decrypt {

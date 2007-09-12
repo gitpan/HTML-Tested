@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 59;
+use Test::More tests => 60;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -26,8 +26,7 @@ isnt($v, "hello");
 is($s->decrypt($v), "hello");
 is($s->decrypt("dskdskd"), undef);
 
-# Encrypting twice gives different result. Dependent on Crypt::CBC version.
-# isnt($s->encrypt("hello"), $v);
+is($s->encrypt("hello"), $v);
 
 # And length is per 8 byte block
 is(length($v), length($s->encrypt("hello1")));
@@ -68,7 +67,6 @@ $object->ht_set_widget_option("v", "is_sealed", 1);
 $object->ht_add_widget('HTML::Tested::Value', 'b', is_sealed => 1);
 $object->b($object->v);
 
-$object->ht_enable_seal_cache;
 $object->ht_render($stash);
 ok(exists $stash->{v});
 isnt($stash->{v}, 'hello');
@@ -267,7 +265,6 @@ package L;
 use base 'HTML::Tested';
 __PACKAGE__->ht_add_widget('HTML::Tested::List', l => 'TU');
 __PACKAGE__->ht_add_widget('HTML::Tested::Value', 'v' => is_sealed => 1);
-__PACKAGE__->ht_enable_seal_cache;
 
 package main;
 
@@ -277,9 +274,8 @@ is($stash->{v}, $stash->{l}->[0]->{b});
 
 $s2 = {};
 $object->ht_render($s2);
-isnt($s2->{v}, $stash->{v});
+is($s2->{v}, $stash->{v});
 is($s2->{v}, $s2->{l}->[0]->{b});
 
-L->ht_disable_seal_cache;
 $object->ht_render($s2);
-isnt($s2->{v}, $s2->{l}->[0]->{b});
+is($s2->{v}, $s2->{l}->[0]->{b});
