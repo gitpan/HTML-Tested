@@ -3,7 +3,7 @@ use warnings FATAL => 'all';
 
 package HTML::Tested::Test::Request::Upload;
 use base 'Class::Accessor';
-__PACKAGE__->mk_accessors(qw(name filename fh));
+__PACKAGE__->mk_accessors(qw(name filename fh size));
 
 package HTML::Tested::Test::Request;
 use base 'Class::Accessor';
@@ -70,7 +70,7 @@ sub add_upload {
 	$self->_uploads([]) unless $self->_uploads;
 	open(my $fh, $v) or die "Unable to open $v";
 	push @{ $self->_uploads }, HTML::Tested::Test::Request::Upload->new({
-			name => $n, filename => basename($v) , fh => $fh });
+		name => $n, filename => $v , fh => $fh, size => -s $v });
 }
 
 sub upload {

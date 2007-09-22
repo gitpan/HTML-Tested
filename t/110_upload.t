@@ -1,13 +1,14 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 19;
+use Test::More tests => 31;
 use Data::Dumper;
 use File::Temp qw(tempdir);
 use File::Slurp;
 use File::Spec;
 
-BEGIN { use_ok('HTML::Tested', qw(HTV)); 
+BEGIN { use_ok('HTML::Tested', qw(HTV HT)); 
+	use_ok(HT() . "::List");
 	use_ok('HTML::Tested::Test::Request');
 	use_ok('HTML::Tested::Test');
 	use_ok('HTML::Tested::Value::Upload');
@@ -36,7 +37,8 @@ my $req = HTML::Tested::Test::Request->new;
 $req->add_upload(v => "$td/c.txt");
 is(scalar($req->upload), 1);
 is(($req->upload)[0]->name, 'v');
-is(($req->upload)[0]->filename, 'c.txt');
+is(($req->upload)[0]->filename, "$td/c.txt");
+is(($req->upload)[0]->size, -s "$td/c.txt");
 is(ref(($req->upload)[0]->fh), 'GLOB');
 
 my $res = T->ht_convert_request_to_tree($req);
@@ -50,9 +52,47 @@ is(scalar($req->upload), 1);
 
 my $u = ($req->upload)[0];
 is($u->name, 'v');
-is($u->filename, 'c.txt');
+is($u->filename, "$td/c.txt");
 is(ref($u->fh), 'GLOB');
 
 $req->add_upload(c => "$td/c.txt");
 is($req->upload('c')->name, 'c');
 is($req->upload('j'), undef);
+
+package TC;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HT . "::List", l => 'T');
+
+package main;
+$object = TC->new({ l => [ map { T->new } (1 .. 2) ] });
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { l => [
+	{ v => '<input type="file" id="l__1__v" name="l__1__v" />' . "\n" }
+	, { v => '<input type="file" id="l__2__v" name="l__2__v" />' . "\n" }
+] }) or diag(Dumper($stash));
+
+T->ht_add_widget(::HTV, "b");
+
+$req = HTML::Tested::Test::Request->new;
+HTML::Tested::Test->convert_tree_to_param('TC', $req, { l => [
+	{ b => 1 }, { v => "$td/c.txt" }, { b => 2, v => "$td/c.txt" } ] });
+$object = TC->ht_convert_request_to_tree($req);
+is($object->l->[0]->{b}, 1);
+is(read_file($object->l->[1]->v), "Hello\nworld\n");
+is(read_file($object->l->[2]->v), "Hello\nworld\n");
+is($object->l->[2]->b, 2);
+
+package T1;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV."::Upload", 'v', object => 1);
+
+package main;
+$req = HTML::Tested::Test::Request->new;
+$req->add_upload(v => "$td/c.txt");
+$object = T1->ht_convert_request_to_tree($req);
+isnt($object->v, undef);
+is($object->v->filename, "$td/c.txt");
+is($object->v->size, -s "$td/c.txt");
+is($object->v->name, "v");
+is(read_file($object->v->fh), "Hello\nworld\n");

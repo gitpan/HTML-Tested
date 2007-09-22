@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.28;
+our $VERSION = 0.29;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -157,18 +157,14 @@ compatible object.
 =cut
 sub ht_convert_request_to_tree {
 	my ($class, $r) = @_;
-	my @pkeys = $r->param;
+	my %args = ((map { ($_, $r->param($_)) } $r->param)
+			, (map { ($_->name, $_) } $r->upload));
 	my %res = (__ht_crqt_state => {});
-	for my $p (sort @pkeys) {
+	for my $k (sort keys %args) {
 		$class->ht_absorb_one_value(\%res, 
-				$r->param($p), split('__', $p));
+				$args{$k}, split('__', $k));
 	}
 	delete $res{__ht_crqt_state};
-
-	for my $u ($r->upload) {
-		$class->ht_absorb_one_value(\%res, 
-				$u->fh, split('__', $u->name));
-	}
 	return bless(\%res, $class);
 }
 
