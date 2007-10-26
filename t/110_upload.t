@@ -36,12 +36,13 @@ write_file("$td/c.txt", "Hello\nworld\n");
 my $req = HTML::Tested::Test::Request->new;
 $req->add_upload(v => "$td/c.txt");
 is(scalar($req->upload), 1);
-is(($req->upload)[0]->name, 'v');
-is(($req->upload)[0]->filename, "$td/c.txt");
-is(($req->upload)[0]->size, -s "$td/c.txt");
-is(ref(($req->upload)[0]->fh), 'GLOB');
+is($req->upload(($req->upload)[0])->name, 'v');
+is($req->upload(($req->upload)[0])->filename, "$td/c.txt");
+is($req->upload(($req->upload)[0])->size, -s "$td/c.txt");
+is(ref($req->upload(($req->upload)[0])->fh), 'GLOB');
 
-my $res = T->ht_convert_request_to_tree($req);
+my $res = T->ht_load_from_params(map { $_->name, $_ }
+		map { $req->upload($_) } $req->upload);
 is(ref($res->v), 'GLOB');
 is(read_file($res->v), "Hello\nworld\n");
 
@@ -50,7 +51,7 @@ HTML::Tested::Test->convert_tree_to_param('T', $req, { v => "$td/c.txt" });
 is_deeply([ $req->param ], []);
 is(scalar($req->upload), 1);
 
-my $u = ($req->upload)[0];
+my $u = $req->upload("v");
 is($u->name, 'v');
 is($u->filename, "$td/c.txt");
 is(ref($u->fh), 'GLOB');
@@ -77,7 +78,9 @@ T->ht_add_widget(::HTV, "b");
 $req = HTML::Tested::Test::Request->new;
 HTML::Tested::Test->convert_tree_to_param('TC', $req, { l => [
 	{ b => 1 }, { v => "$td/c.txt" }, { b => 2, v => "$td/c.txt" } ] });
-$object = TC->ht_convert_request_to_tree($req);
+$object = TC->ht_load_from_params((map { $_->name, $_ }
+		map { $req->upload($_) } $req->upload)
+	, (map { $_, $req->param($_) } $req->param));
 is($object->l->[0]->{b}, 1);
 is(read_file($object->l->[1]->v), "Hello\nworld\n");
 is(read_file($object->l->[2]->v), "Hello\nworld\n");
@@ -90,7 +93,8 @@ __PACKAGE__->ht_add_widget(::HTV."::Upload", 'v', object => 1);
 package main;
 $req = HTML::Tested::Test::Request->new;
 $req->add_upload(v => "$td/c.txt");
-$object = T1->ht_convert_request_to_tree($req);
+$object = T1->ht_load_from_params(map { $_->name, $_ }
+		map { $req->upload($_) } $req->upload);
 isnt($object->v, undef);
 is($object->v->filename, "$td/c.txt");
 is($object->v->size, -s "$td/c.txt");

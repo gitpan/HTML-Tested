@@ -17,6 +17,8 @@ sub server_root_relative {
 	return $_[1];
 }
 
+sub body_status { return 'Success'; }
+
 sub param {
 	my ($self, $name, $val) = @_;
 	$self->_param({}) unless $self->_param;
@@ -76,7 +78,7 @@ sub add_upload {
 sub upload {
 	my ($self, $n) = @_;
 	my $ups = $self->_uploads || [];
-	return $n ? (grep { $_->name eq $n } @$ups)[0] : @$ups;
+	return $n ? (grep { $_->name eq $n } @$ups)[0] : map { $_->name } @$ups;
 }
 
 sub as_string {

@@ -31,8 +31,7 @@ $obj->d(undef);
 $obj->ht_render($stash);
 is_deeply($stash, { d => '' });
 
-my $r = HTML::Tested::Test::Request->new({ _param => { d => 'Oct 27, 1976' } });
-$obj = T->ht_convert_request_to_tree($r);
+$obj = T->ht_load_from_params(d => 'Oct 27, 1976');
 $obj->ht_render($stash);
 is_deeply($stash, { d => 'Oct 27, 1976' });
 
@@ -43,8 +42,7 @@ __PACKAGE__->ht_add_widget(::HTV, e => is_datetime => {
 
 package main;
 
-$r = HTML::Tested::Test::Request->new({ _param => { e => '27.10.1976' } });
-$obj = T2->ht_convert_request_to_tree($r);
+$obj = T2->ht_load_from_params(e => '27.10.1976');
 $stash = {};
 $obj->ht_render($stash);
 is_deeply($stash, { e => '27.10.1976' });
@@ -57,11 +55,11 @@ like($qs, qr/^hello\?id/);
 unlike($qs, qr/555555/);
 like($qs, qr/&e=27\.10\.1976/);
 
-
+my $r = HTML::Tested::Test::Request->new;
 $r->parse_url($qs);
 isnt($r->param('id'), undef);
 
-$obj = T2->ht_convert_request_to_tree($r);
+$obj = T2->ht_load_from_params(map { $_, $r->param($_) } $r->param);
 is($obj->id, 555555);
 is($obj->e->year, '1976');
 

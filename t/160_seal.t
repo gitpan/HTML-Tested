@@ -73,20 +73,18 @@ isnt($stash->{v}, 'hello');
 is($s->decrypt($stash->{v}), 'hello');
 is($stash->{v}, $stash->{b});
 
-my $r = HTML::Tested::Test::Request->new({ _param => { v => $stash->{v} } });
-$res = T->ht_convert_request_to_tree($r);
+$res = T->ht_load_from_params(v => $stash->{v});
 is($res->v, 'hello');
 
-$r = HTML::Tested::Test::Request->new({ _param => { v => 'hello' } });
-$res = T->ht_convert_request_to_tree($r);
+$res = T->ht_load_from_params(v => 'hello');
 is($res->v, undef);
 
-$r = HTML::Tested::Test::Request->new;
+my $r = HTML::Tested::Test::Request->new;
 $r->set_params({ HT_SEALED_v => 'hello', f => 'g' });
 is($r->param('f'), 'g');
 isnt($r->param('v'), 'hello');
 isnt($r->param('v'), undef);
-$res = T->ht_convert_request_to_tree($r);
+$res = T->ht_load_from_params(map { $_, $r->param($_) } $r->param);
 is($res->v, 'hello');
 
 $s = <<ENDS;
@@ -220,9 +218,7 @@ $object->ht_render($stash);
 unlike($stash->{v}, qr/go/) or diag(Dumper($stash));
 
 ok($stash->{v} =~ /id=(\w+)/);
-$r = HTML::Tested::Test::Request->new;
-$r->set_params({ v => $1 });
-$res = T->ht_convert_request_to_tree($r);
+$res = T->ht_load_from_params(v => $1);
 is($res->v, 'go<');
 
 undef $HTML::Tested::Seal::_instance;

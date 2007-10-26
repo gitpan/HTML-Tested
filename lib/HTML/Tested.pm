@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.29;
+our $VERSION = 0.30;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -149,16 +149,8 @@ sub ht_absorb_one_value {
 	$wc->absorb_one_value($root, $val, @path);
 }
 
-=head2 ht_convert_request_to_tree(class, r)
-
-Creates blessed instance of the class from Apache::Request
-compatible object.
-
-=cut
-sub ht_convert_request_to_tree {
-	my ($class, $r) = @_;
-	my %args = ((map { ($_, $r->param($_)) } $r->param)
-			, (map { ($_->name, $_) } $r->upload));
+sub ht_load_from_params {
+	my ($class, %args) = @_;
 	my %res = (__ht_crqt_state => {});
 	for my $k (sort keys %args) {
 		$class->ht_absorb_one_value(\%res, 

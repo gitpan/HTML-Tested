@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 45;
+use Test::More tests => 46;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
@@ -49,6 +49,7 @@ $object->mv(undef);
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b', mv => '<!-- mv --> ' })
 	or diag(Dumper($stash));
+is($req->body_status, 'Success');
 
 $object->v(undef);
 $object->ht_render($stash);
@@ -152,8 +153,7 @@ __PACKAGE__->ht_add_widget("TV", tv => is_sealed => 1);
 
 package main;
 
-$req = HTML::Tested::Test::Request->new({ _param => { tv => 'a' } });
-my $t5 = T5->ht_convert_request_to_tree($req);
+my $t5 = T5->ht_load_from_params(tv => 'a');
 is($t5->tv, 'a');
 is($_uv[0], 'a');
 is($_uv[1], $t5);

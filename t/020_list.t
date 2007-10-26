@@ -46,10 +46,8 @@ my $exp = [ map { LR->new({ v1 => $_ }) } qw(a b) ];
 is_deeply($object->l1_containee_do(qw(make_test_array a b)), $exp);
 is_deeply($object->l1, $exp);
 
-my $req = HTML::Tested::Test::Request->new({ _param => {
-		l1__2__v1 => 'b', l1__1__v1 => 'a', } });
 my $tree ={ l1 => [ { v1 => 'a' }, { v1 => 'b' }, ] };
-my $res = L->ht_convert_request_to_tree($req);
+my $res = L->ht_load_from_params(l1__2__v1 => 'b', l1__1__v1 => 'a');
 isa_ok($res, 'L');
 is_deeply($res, $tree) or diag(Dumper($res));
 is($res->l1->[1]->v1, 'b');
@@ -94,6 +92,7 @@ is_deeply([ HTML::Tested::Test->check_text(ref($object),
 					{ v1 => 'b' } ] }) ], [
 	'Unable to find "<!-- l1__2__v1 --> b" in "<!-- l1__1__v1 --> a b"' ]);
 
+my $req = HTML::Tested::Test::Request->new;
 HTML::Tested::Test->convert_tree_to_param(ref($object), $req, 
 		{ l1 => [ { v1 => 'a' }, { v1 => 'b' } ] });
 is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b' })
@@ -150,7 +149,7 @@ is_deeply($req->_param, { l1__1__v1 => 'a', l1__2__v1 => 'b'
 		, l1__2__ht_id => 2, l1__1__ht_id => 1 })
 	or diag(Dumper($req));
 
-$res = L2->ht_convert_request_to_tree($req);
+$res = L2->ht_load_from_params(map { $_, $req->param($_) } $req->param);
 $tree ={ l1 => [ { v1 => 'a', ht_id => 1 }, { ht_id => 2, v1 => 'b' }, ] };
 is_deeply($res, $tree) or diag(Dumper($res));
 
@@ -169,7 +168,7 @@ $req = HTML::Tested::Test::Request->new({ _param => {
 	'department_list__2__office_edit' => '2',
 } });
 
-$tree = X->ht_convert_request_to_tree($req);
+$tree = X->ht_load_from_params(map { $_, $req->param($_) } $req->param);
 is_deeply($tree->department_list, [ {
 	office_edit => 2, building_dropdown => 1
 } ]) or diag(Dumper($tree));
