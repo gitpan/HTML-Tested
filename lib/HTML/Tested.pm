@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.30;
+our $VERSION = 0.31;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -151,12 +151,13 @@ sub ht_absorb_one_value {
 
 sub ht_load_from_params {
 	my ($class, %args) = @_;
-	my %res = (__ht_crqt_state => {});
-	for my $k (sort keys %args) {
+	my %res;
+	for my $k (keys %args) {
 		$class->ht_absorb_one_value(\%res, 
 				$args{$k}, split('__', $k));
 	}
-	delete $res{__ht_crqt_state};
+	my $wl = $class->Widgets_List;
+	$_->finish_load(\%res) for grep { $_->can('finish_load') } @$wl;
 	return bless(\%res, $class);
 }
 

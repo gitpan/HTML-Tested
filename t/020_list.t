@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 34;
+use Test::More tests => 36;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -204,3 +204,18 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 		{ HT_UNSORTED_l => [ { b => 4 }, { HT_SEALED_a => 1 } ] }) ]
 			, [ 'Mismatch at b: got "3", expected "4"' ]);
+
+package H100I;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, "a");
+
+package HT100;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HT."::List", l => 'H100I');
+
+package main;
+
+my $obj = HT100->ht_load_from_params(map { ("l__$_\__a" => $_) } (1 .. 100));
+is_deeply([ map { $_->a } @{ $obj->l } ], [ (1 .. 100) ]);
+$obj = HT100->ht_load_from_params;
+is_deeply($obj->l, []);

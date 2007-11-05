@@ -58,14 +58,15 @@ sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
 	my $arr = $root->{ $self->name } || [];
 	my $id = shift(@path) or return;
-	my $last = $arr->[ @$arr - 1 ];
-	if (!$last || $root->{__ht_crqt_state}->{ $self->name } ne $id) {
-		$root->{__ht_crqt_state}->{ $self->name } = $id;
-		$last = bless({}, $self->containee);
-		push @$arr, $last;
-	}
-	$self->containee->ht_absorb_one_value($last, $val, @path);
+	$arr->[--$id] ||= bless({}, $self->containee);
+	$self->containee->ht_absorb_one_value($arr->[$id], $val, @path);
 	$root->{ $self->name } = $arr;
+}
+
+sub finish_load {
+	my ($self, $root) = @_;
+	my $arr = $root->{ $self->name };
+	$root->{ $self->name } = [ grep { $_ } @$arr ];
 }
 
 sub validate {
