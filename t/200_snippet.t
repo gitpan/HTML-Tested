@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 5;
+use Test::More tests => 8;
 use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::Value::Snippet');
@@ -26,3 +26,11 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash, {
 			sni => "<b>&amp;hi</b>" }) ], []);
 is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash, {
 			v => "&hi", sni => "<b>[% v %]</b>" }) ], []);
+
+# check that trusted doesn't load from param
+T->ht_set_widget_option(sni => default_value => '[% foo');
+$obj = T->ht_load_from_params(v => 'f', sni => 'k');
+is($obj->v, 'f');
+is($obj->sni, undef);
+$obj->ht_render($stash);
+is_deeply($stash, { v => 'f', sni => "[% foo" });

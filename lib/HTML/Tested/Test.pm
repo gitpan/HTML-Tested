@@ -80,9 +80,12 @@ sub bless_from_tree_for_test {
 	my $res = {};
 	my (@disabled, %e, @reverted, @sealed, @unsorted);
 	while (my ($n, $v) = each %$expected) {
-		push @reverted, $n if ($n =~ s/^HT_NO_//);
-		push @sealed, $n if ($n =~ s/^HT_SEALED_//);
-		push @unsorted, $n if ($n =~ s/^HT_UNSORTED_//);
+		my $rev = ($n =~ s/^HT_NO_//);
+		my $sealed = ($n =~ s/^HT_SEALED_//);
+		my $unsorted = ($n =~ s/^HT_UNSORTED_//);
+		push @reverted, $n if $rev;
+		push @sealed, $n if $sealed;
+		push @unsorted, $n if $unsorted;
 		$e{$n} = $v;
 	}
 	$expected = \%e;

@@ -43,7 +43,8 @@ sub handle_sealed {
 		$e_val = $class->_replace_sealed($e_val);
 		$r_val = $class->_replace_sealed($r_val);
 		push @$err, "$name wasn't sealed $r_val"
-			if ($orig_r_val eq $r_val);
+			if (($orig_r_val eq $r_val)
+					&& !$e_root->{"__HT_REVERTED__$name"});
 	} elsif ($e_root->ht_get_widget_option($name, "is_sealed")) {
 		push @$err, "HT_SEALED was not defined on $name";
 	}

@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 60;
+use Test::More tests => 63;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -148,6 +148,14 @@ ENDS
 
 is_deeply([ HTML::Tested::Test->check_text(ref($object), 
 		$s, { HT_SEALED_v => 'hello', HT_SEALED_h => 'bye' }) ], []);
+
+my @err = HTML::Tested::Test->check_text(ref($object), 
+	$s, { HT_NO_HT_SEALED_v => 'hello', HT_SEALED_h => 'bye' });
+is(@err, 1);
+like($err[0], qr/Unexpectedly found "hello"/);
+
+is_deeply([ HTML::Tested::Test->check_text(ref($object), 
+	"sdfsfsdf", { HT_NO_HT_SEALED_v => 'hello' }) ], []);
 
 is_deeply([ HTML::Tested::Test->check_text(ref($object), 
 		$s, { HT_SEALED_v => 'hello', HT_SEALED_h => 'bye1' }) ], [

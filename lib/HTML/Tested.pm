@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.31;
+our $VERSION = 0.32;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -88,16 +88,14 @@ will have default value "b".
 
 =cut
 sub ht_add_widget {
-	my ($class1, $widget_class, $name, @args) = @_;
-	$class1->mk_accessors($name);
-
-	# The following will be simplified once deprecation is over...
-	my $res = $widget_class->new($class1, $name, @args);
+	my ($class, $widget_class, $name, @args) = @_;
+	$class->mk_accessors($name);
+	my $res = $widget_class->new($class, $name, @args);
 
 	# to avoid inheritance troubles...
-	my @wl = @{ $class1->Widgets_List || [] };
+	my @wl = @{ $class->Widgets_List || [] };
 	push @wl, $res;
-	$class1->Widgets_List(\@wl);
+	$class->Widgets_List(\@wl);
 	return $res;
 }
 

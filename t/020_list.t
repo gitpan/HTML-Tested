@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 36;
+use Test::More tests => 39;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -219,3 +219,30 @@ my $obj = HT100->ht_load_from_params(map { ("l__$_\__a" => $_) } (1 .. 100));
 is_deeply([ map { $_->a } @{ $obj->l } ], [ (1 .. 100) ]);
 $obj = HT100->ht_load_from_params;
 is_deeply($obj->l, []);
+
+my ($ic1, $ic2);
+package HT101;
+use base 'HTML::Tested';
+$ic1 = __PACKAGE__->ht_add_widget(::HT."::List", 'l1')->containee;
+$ic2 = __PACKAGE__->ht_add_widget(::HT."::List", 'l2')->containee;
+
+package main;
+
+isnt($ic1, $ic2);
+$ic1->ht_add_widget(::HTV, "v1");
+$ic2->ht_add_widget(::HTV, "v2");
+
+$obj = HT101->ht_load_from_params(l1__1__v1 => "a", l2__1__v2 => "b");
+$stash = {};
+$obj->ht_render($stash);
+is_deeply($stash, { l1 => [ { v1 => 'a' } ], l2 => [ { v2 => 'b' } ] });
+
+package HT102;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HT."::List", 'l1', undef, cbase => 'H100I');
+
+package main;
+$obj = HT102->ht_load_from_params(l1__1__a => "a");
+$stash = {};
+$obj->ht_render($stash);
+is_deeply($stash, { l1 => [ { a => 'a' } ] }) or diag(Dumper($stash));

@@ -237,6 +237,7 @@ widgets aggregating other widgets (such as C<HTML::Tested::List>).
 =cut
 sub absorb_one_value {
 	my ($self, $root, $val, @path) = @_;
+	return if $self->options->{is_trusted};
 	$val = $self->unseal_value($val, $root)
 			if $self->options->{"is_sealed"};
 	my $dtfs = $self->options->{"is_datetime"};

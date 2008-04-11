@@ -8,7 +8,6 @@ use Carp;
 
 sub new {
 	my ($class, $parent, $name, $c, %args) = @_;
-	$args{containee} ||= $c;
 	$args{name} ||= $name;
 
 	my @renderers = ('HTML::Tested::List::Renderer');
@@ -17,6 +16,10 @@ sub new {
 	$args{renderers} ||= \@renderers;
 	{
 		no strict 'refs';
+		if (!$c) {
+			$c = "$parent\::Item$name";
+			push @{ "$c\::ISA" }, ($args{cbase} || "HTML::Tested");
+		}
 		*{ "$parent\::$name\_containee" } = sub { return $c; };
 		*{ "$parent\::$name\_containee_do" } = sub {
 			my ($self, $func, @args) = @_;
@@ -24,6 +27,7 @@ sub new {
 		};
 	};
 	
+	$args{containee} ||= $c;
 	my $self = bless(\%args, $class);
 	for my $r (@{ $self->renderers }) {
 		$r->init($self, $parent);
@@ -43,8 +47,7 @@ sub render {
 }
 
 sub containee {
-	my $res = shift()->{containee}
-		or confess "No containee argument given";
+	my $res = shift()->{containee} or confess "No containee argument given";
 	return $res;
 }
 
