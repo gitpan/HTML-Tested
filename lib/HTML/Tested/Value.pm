@@ -229,6 +229,8 @@ sub unseal_value {
 	return HTML::Tested::Seal->instance->decrypt($val);
 }
 
+sub merge_one_value { shift()->absorb_one_value(@_); }
+
 =head2 $widget->absorb_one_value($parent, $val, @path)
 
 Parses C<$val> and puts the result into C<$parent> object. C<@path> is used for

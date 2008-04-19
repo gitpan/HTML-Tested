@@ -1,11 +1,16 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 8;
+use Test::More tests => 18;
 use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::Value::Snippet');
 	use_ok('HTML::Tested', 'HTV');
+	use_ok('HTML::Tested::Value::EditBox');
+	use_ok('HTML::Tested::Value::DropDown');
+	use_ok('HTML::Tested::Value::CheckBox');
+	use_ok('HTML::Tested::List');
+	use_ok('HTML::Tested::Test::Request');
 }
 
 package T;
@@ -34,3 +39,33 @@ is($obj->v, 'f');
 is($obj->sni, undef);
 $obj->ht_render($stash);
 is_deeply($stash, { v => 'f', sni => "[% foo" });
+
+my $req = HTML::Tested::Test::Request->new({ uri => 'g' });
+is($req->uri, 'g');
+
+# check that set_params clears old ones
+$req->set_params({ foo => 'boo' });
+$req->set_params({ goo => 'woo' });
+is($req->param('foo'), undef);
+
+
+# todo: default_value, check, uncheck
+
+package T1;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV . "::EditBox", "eb");
+__PACKAGE__->ht_add_widget(::HTV . "::DropDown", "dd");
+
+package main;
+my $c = T1->ht_add_widget("HTML::Tested::List", "l")->containee;
+$c->ht_add_widget(::HTV . "::CheckBox", "ch1");
+
+$obj = T1->new({ eb => 'foo', l => [ $c->new({ ch1 => [ 284 ] }) ] });
+
+$obj->ht_merge_params(eb => 'goo', l__1__ch1 => 1);
+is($obj->eb, 'goo');
+is_deeply($obj->l->[0]->ch1, [ 284, 1 ]);
+
+$obj = T1->new({ dd => [ [ 1, 'A', 1 ], [ 2, 'B' ] ] });
+$obj->ht_merge_params(dd => 2);
+is_deeply($obj->dd, [ [ 1, 'A', "" ], [ 2, 'B', 1 ] ]);

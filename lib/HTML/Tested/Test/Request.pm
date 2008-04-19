@@ -11,7 +11,7 @@ use HTML::Tested::Seal;
 use Data::Dumper;
 use File::Basename qw(basename);
 
-__PACKAGE__->mk_accessors(qw(_param _pnotes _uploads _dir_config));
+__PACKAGE__->mk_accessors(qw(_param _pnotes _uploads _dir_config uri));
 
 sub server_root_relative {
 	return $_[1];
@@ -39,8 +39,17 @@ sub dir_config {
 	delete $dc->{$name} if !defined($val);
 }
 
+=head2 $object->set_params($paramref)
+
+Sets param values according to C<$paramref> hash. Clears old params first.
+
+Parameter names starting with C<HT_SEALED_> are encrypted and C<HT_SEALED_>
+prefix is removed.
+
+=cut
 sub set_params {
 	my ($self, $p) = @_;
+	$self->_param({});
 	while (my ($n, $v) = each %$p) {
 		$v = HTML::Tested::Seal->instance->encrypt($v)
 				if ($n =~ s/^HT_SEALED_//);

@@ -57,12 +57,15 @@ sub bless_from_tree {
 	return [ map { $target->ht_bless_from_tree($_) } @$p ];
 }
 
-sub absorb_one_value {
-	my ($self, $root, $val, @path) = @_;
+sub merge_one_value { shift()->_do_one_value("merge_one_value", @_); }
+sub absorb_one_value { shift()->_do_one_value("absorb_one_value", @_); }
+
+sub _do_one_value {
+	my ($self, $func, $root, $val, @path) = @_;
 	my $arr = $root->{ $self->name } || [];
 	my $id = shift(@path) or return;
 	$arr->[--$id] ||= bless({}, $self->containee);
-	$self->containee->ht_absorb_one_value($arr->[$id], $val, @path);
+	$arr->[$id]->_ht_set_one($func, $val, @path);
 	$root->{ $self->name } = $arr;
 }
 

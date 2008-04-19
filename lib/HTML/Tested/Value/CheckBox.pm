@@ -10,6 +10,12 @@ sub transform_value {
 	return $self->SUPER::transform_value($caller, $val);
 }
 
+sub merge_one_value {
+	my ($self, $root, $val, @path) = @_;
+	my $n = $self->name;
+	push @{ $root->$n }, $val;
+}
+
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	my $che = $val->[1] ? " checked" : "";

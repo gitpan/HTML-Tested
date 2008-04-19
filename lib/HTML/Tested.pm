@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.32;
+our $VERSION = 0.33;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -140,23 +140,25 @@ sub ht_bless_from_tree {
 	return bless($res, $class);
 }
 
-sub ht_absorb_one_value {
-	my ($self, $root, $val, @path) = @_;
+sub _ht_set_one {
+	my ($self, $func, $val, @path) = @_;
 	my $p = shift(@path) or return;
 	my $wc = $self->ht_find_widget($p) or return;
-	$wc->absorb_one_value($root, $val, @path);
+	$wc->$func($self, $val, @path);
+}
+
+sub _for_each_arg_set_one {
+	my ($self, $func, %args) = @_;
+	$self->_ht_set_one($func, $args{$_}, split('__', $_)) for keys %args;
+	my $wl = $self->Widgets_List;
+	$_->finish_load($self) for grep { $_->can('finish_load') } @$wl;
 }
 
 sub ht_load_from_params {
 	my ($class, %args) = @_;
-	my %res;
-	for my $k (keys %args) {
-		$class->ht_absorb_one_value(\%res, 
-				$args{$k}, split('__', $k));
-	}
-	my $wl = $class->Widgets_List;
-	$_->finish_load(\%res) for grep { $_->can('finish_load') } @$wl;
-	return bless(\%res, $class);
+	my $self = $class->new;
+	$self->_for_each_arg_set_one("absorb_one_value", %args);
+	return $self;
 }
 
 =head2 ht_get_widget_option($widget_name, $option_name)
@@ -219,6 +221,20 @@ sub ht_make_query_string {
 	return "$uri?" . join("&", map {
 		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_)
 	} @widget_names);
+}
+
+=head2 $root->ht_merge_params(@params)
+
+Merges parameters with current values. Tries to reconstruct the state of the
+controls to user set values.
+
+E.g. for EditBox it means setting its value to one in params. For checkbox -
+setting its C<checked> state.
+
+=cut
+sub ht_merge_params {
+	my ($self, %params) = @_;
+	$self->_for_each_arg_set_one("merge_one_value", %params);
 }
 
 1;
