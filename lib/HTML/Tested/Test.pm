@@ -92,7 +92,7 @@ sub bless_from_tree_for_test {
 
 	my $e_class = Make_Expected_Class($target, $expected);
 	while (my ($n, $v) = each %$expected) {
-		if (defined($v) && $v eq 'HT_DISABLED') {
+		if (defined($v) && !ref($v) && $v eq 'HT_DISABLED') {
 			push @disabled, $n;
 			next;
 		}

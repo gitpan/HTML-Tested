@@ -51,6 +51,23 @@ sub handle_sealed {
 	return ($e_val, $r_val);
 }
 
+sub _is_equal {
+	my ($class, $e_val, $cb) = @_;
+	return 1 if $cb->($e_val);
+	return undef unless ($e_val =~ /(\$VAR1 = \[.*\];)/ms);
+
+	my $arr_str = $1;
+	my $VAR1;
+	eval $arr_str;
+	die $@ if $@;
+	for (@$VAR1) {
+		my $ev = $e_val;
+		$ev =~ s#\$VAR1 = \[.*\];\n#$_#ms;
+		return 1 if $cb->($ev);
+	}
+	return undef;
+}
+
 sub check_stash {
 	my ($class, $e_root, $name, $e_stash, $r_stash) = @_;
 	my @err;
@@ -62,8 +79,8 @@ sub check_stash {
 
 	($e_val, $r_val) = $class->handle_sealed($e_root, $name
 					, $e_val, $r_val, \@err);
-	goto OUT if (@err || $r_val eq $e_val);
-
+	goto OUT if (@err || $class->_is_equal($e_val
+				, sub { $r_val eq $_[0]; }));
 	@err = Stash_Mismatch($name, $r_val, $e_val);
 OUT:
 	return @err;
@@ -80,13 +97,12 @@ sub _check_text_i {
 	my @ret;
 	($v, $text) = $class->handle_sealed($e_root, $name, $v, $text, \@ret);
 
-	if ($e_root->{"__HT_REVERTED__$name"}) {
-		@ret = ("Unexpectedly found \"$v\" in \"$text\"")
-			if (index($text, $v) != -1);
-	} elsif (index($text, $v) == -1) {
-		@ret = ("Unable to find \"$v\" in \"$text\"");
-	}
-	return @ret;
+	my $ok = $class->_is_equal($v, sub { index($text, $_[0]) != -1; });
+	return ("Unexpectedly found \"$v\" in \"$text\"")
+		if ($ok && $e_root->{"__HT_REVERTED__$name"});
+	return ("Unable to find \"$v\" in \"$text\"")
+		if (!$ok && !$e_root->{"__HT_REVERTED__$name"});
+	return ();
 }
 
 sub check_text {

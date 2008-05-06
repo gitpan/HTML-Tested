@@ -132,7 +132,7 @@ sub transform_value {
 		if $caller->ht_get_widget_option($n, "is_sealed");
 
 	$val = $self->encode_value($val, $caller)
-		unless $caller->ht_get_widget_option($n, "is_trusted");
+		if !($dtfs || $caller->ht_get_widget_option($n, "is_trusted"));
 	return $val;
 }
 

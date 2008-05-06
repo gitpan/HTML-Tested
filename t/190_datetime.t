@@ -1,15 +1,20 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 22;
+use Test::More tests => 32;
 use DateTime;
+use DateTime::Duration;
 use HTML::Tested::Test::Request;
-use HTML::Tested::Test;
 use Data::Dumper;
+use Carp;
 
 BEGIN { use_ok('HTML::Tested', 'HTV');
 	use_ok('HTML::Tested::Value');
+	use_ok('HTML::Tested::Test::Value');
 	use_ok('HTML::Tested::Value::DropDown');
+	use_ok('HTML::Tested::Test::DateTime');
+	use_ok('HTML::Tested::Value::Marked');
+	use_ok('HTML::Tested::Test');
 }
 
 HTML::Tested::Seal->instance('boo boo boo');
@@ -96,3 +101,47 @@ unlike($stash->{dd}, qr/"2"/);
 is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash,
 		{ HT_SEALED_dd => [ [ 1, $dt1 ], [ 2, $dt2, 1 ] ] }) ], [])
 	or diag(Dumper($stash));
+
+my $now = DateTime->now(time_zone => POSIX::strftime('%z', localtime));
+
+package T4;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, d => 'is_datetime' => '%c');
+
+package main;
+$obj = T4->new({ d => $now });
+$stash = {};
+$obj->ht_render($stash);
+
+# check range comparison
+is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
+		, { d => $now }) ], []);
+
+my $dur = DateTime::Duration->new(seconds => 5);
+$obj->d($obj->d - $dur);
+$obj->ht_render($stash);
+$SIG{__WARN__} = sub { diag(Carp::longmess(@_)); };
+is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
+		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []);
+
+package T5;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV . "::Marked", d => 'is_datetime' => '%c');
+
+package main;
+$obj = T5->new({ d => ($now - $dur) });
+$stash = {};
+$obj->ht_render($stash);
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
+		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []);
+
+my @res = HTML::Tested::Test->check_stash(ref($obj), $stash
+		, { d => HTML::Tested::Test::DateTime->now(3) });
+is(@res, 1);
+
+my $str = "<html>$stash->{d}</html>";
+is_deeply([ HTML::Tested::Test->check_text(ref($obj), $str
+		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []);
+my (undef, undef, $h) = localtime(time);
+like(HTML::Tested::Test::DateTime->now->strftime('%H'), qr/$h/);

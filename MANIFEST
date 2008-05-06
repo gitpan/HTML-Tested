@@ -7,6 +7,7 @@ lib/HTML/Tested/List/Renderer.pm
 lib/HTML/Tested/List/Table.pm
 lib/HTML/Tested/List/Pager.pm
 lib/HTML/Tested/Test.pm
+lib/HTML/Tested/Test/DateTime.pm
 lib/HTML/Tested/Test/Value.pm
 lib/HTML/Tested/Test/Upload.pm
 lib/HTML/Tested/Test/Radio.pm
