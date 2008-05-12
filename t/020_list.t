@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 39;
+use Test::More tests => 40;
 use Data::Dumper;
 use Carp;
 use HTML::Tested::Test::Request;
@@ -246,3 +246,24 @@ $obj = HT102->ht_load_from_params(l1__1__a => "a");
 $stash = {};
 $obj->ht_render($stash);
 is_deeply($stash, { l1 => [ { a => 'a' } ] }) or diag(Dumper($stash));
+
+my @_fvs;
+
+package FV;
+use base 'HTML::Tested::Value';
+
+sub finish_load {
+	my ($self, $root) = @_;
+	push @_fvs, $self->name, $root->{ $self->name };
+}
+
+package HT103;
+use base 'HTML::Tested';
+my $lic = __PACKAGE__->ht_add_widget(::HT."::List", 'l1')->containee;
+__PACKAGE__->ht_add_widget('FV', 'fv103');
+$lic->ht_add_widget('FV', 'lic50');
+
+package main;
+$obj = HT103->ht_load_from_params(l1__1__lic50 => "a", l1__2__lic50 => "b"
+		, fv103 => 'c');
+is_deeply(\@_fvs, [ qw(lic50 a lic50 b fv103 c) ]);

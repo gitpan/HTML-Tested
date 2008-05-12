@@ -71,8 +71,9 @@ sub _do_one_value {
 
 sub finish_load {
 	my ($self, $root) = @_;
-	my $arr = $root->{ $self->name };
-	$root->{ $self->name } = [ grep { $_ } @$arr ];
+	my @arr = grep { $_ } @{ $root->{ $self->name } };
+	$root->{ $self->name } = \@arr;
+	$_->_call_finish_load for @arr;
 }
 
 sub validate {

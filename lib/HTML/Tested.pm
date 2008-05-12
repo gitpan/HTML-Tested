@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.34;
+our $VERSION = 0.35;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -147,11 +147,16 @@ sub _ht_set_one {
 	$wc->$func($self, $val, @path);
 }
 
+sub _call_finish_load {
+	my $self = shift;
+	my $wl = $self->Widgets_List;
+	$_->finish_load($self) for grep { $_->can('finish_load') } @$wl;
+}
+
 sub _for_each_arg_set_one {
 	my ($self, $func, %args) = @_;
 	$self->_ht_set_one($func, $args{$_}, split('__', $_)) for keys %args;
-	my $wl = $self->Widgets_List;
-	$_->finish_load($self) for grep { $_->can('finish_load') } @$wl;
+	$self->_call_finish_load;
 }
 
 sub ht_load_from_params {
