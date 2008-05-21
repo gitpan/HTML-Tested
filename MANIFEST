@@ -51,5 +51,6 @@ t/170_list_table.t
 t/180_unicode.t
 t/190_datetime.t
 t/200_snippet.t
+t/210_profile.t
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

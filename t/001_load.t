@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 use Data::Dumper;
 use Carp;
 
@@ -46,6 +46,9 @@ package main;
 $object = T->new({ w => 'a' });
 is($object->w, 'a');
 isa_ok($w_obj, 'W1');
+
+eval { T->ht_add_widget('W1', 'w'); };
+like($@, qr/"w" already exists/);
 
 # Sometimes options are used for passing opaque values.
 # e.g. HTML::Tested::ClassDBI cdbi_bind

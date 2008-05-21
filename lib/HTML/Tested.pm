@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.35;
+our $VERSION = 0.36;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -74,6 +74,7 @@ use constant HT => 'HTML::Tested';
 use constant HTV => 'HTML::Tested::Value';
 
 __PACKAGE__->mk_classdata('Widgets_List', []);
+__PACKAGE__->mk_classdata('_Widgets_Hash', {});
 
 =head1 METHODS
 
@@ -89,6 +90,8 @@ will have default value "b".
 =cut
 sub ht_add_widget {
 	my ($class, $widget_class, $name, @args) = @_;
+	confess sprintf('Widget "%s" already exists', $name)
+		if $class->ht_find_widget($name);
 	$class->mk_accessors($name);
 	my $res = $widget_class->new($class, $name, @args);
 
@@ -96,6 +99,10 @@ sub ht_add_widget {
 	my @wl = @{ $class->Widgets_List || [] };
 	push @wl, $res;
 	$class->Widgets_List(\@wl);
+
+	my %wh = %{ $class->_Widgets_Hash || {} };
+	$wh{ $res->name } = $res;
+	$class->_Widgets_Hash(\%wh);
 	return $res;
 }
 
@@ -121,8 +128,7 @@ Finds widget named C<$widget_name>.
 =cut
 sub ht_find_widget {
 	my ($self, $wn) = @_;
-	my ($res) = grep { $_->name eq $wn } @{ $self->Widgets_List };
-	return $res;
+	return $self->_Widgets_Hash->{$wn};
 }
 
 =head2 ht_bless_from_tree(class, tree)
