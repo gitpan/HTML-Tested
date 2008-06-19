@@ -13,6 +13,10 @@ use File::Basename qw(basename);
 
 __PACKAGE__->mk_accessors(qw(_param _pnotes _uploads _dir_config uri));
 
+sub hostname { return "some.host"; }
+sub server { return shift(); }
+sub port { return 80; }
+
 sub server_root_relative {
 	return $_[1];
 }
@@ -21,6 +25,7 @@ sub body_status { return 'Success'; }
 
 sub param {
 	my ($self, $name, $val) = @_;
+	return $self->_param unless (wantarray || $name);
 	$self->_param({}) unless $self->_param;
 	$self->_param->{$name} = $val if (defined($val));
 	return $self->_param->{$name} if ($name);

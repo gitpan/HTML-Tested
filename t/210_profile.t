@@ -7,9 +7,11 @@ use File::Slurp;
 
 my $td = tempdir('/tmp/210_pro_XXXXXXXX');
 chdir $td;
-write_file("$td/test.pl", <<'ENDS');
+my $inc = "use lib qw(" . join(" ", @INC) . ");\n";
+write_file("$td/test.pl", $inc . <<'ENDS');
 use HTML::Tested::Value;
 use HTML::Tested::List;
+use File::Slurp;
 
 package LC;
 use base 'HTML::Tested';

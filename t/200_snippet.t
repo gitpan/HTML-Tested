@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 18;
+use Test::More tests => 22;
 use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::Value::Snippet');
@@ -42,12 +42,15 @@ is_deeply($stash, { v => 'f', sni => "[% foo" });
 
 my $req = HTML::Tested::Test::Request->new({ uri => 'g' });
 is($req->uri, 'g');
+is($req->hostname, "some.host");
+is($req->server, $req);
+is($req->port, 80);
 
 # check that set_params clears old ones
 $req->set_params({ foo => 'boo' });
 $req->set_params({ goo => 'woo' });
 is($req->param('foo'), undef);
-
+is_deeply(\%{ $req->param }, { goo => 'woo' });
 
 # todo: default_value, check, uncheck
 
