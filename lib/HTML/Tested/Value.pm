@@ -244,7 +244,8 @@ sub absorb_one_value {
 			if $self->options->{"is_sealed"};
 	my $dtfs = $self->options->{"is_datetime"};
 	$val = $dtfs->parse_datetime($val) if $dtfs;
-	$root->{ $self->name } = $val;
+	$root->{ $self->name } = (defined($val) && $val eq ""
+			&& !$self->options->{keep_empty_string}) ? undef : $val;
 }
 
 1;

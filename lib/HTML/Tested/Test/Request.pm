@@ -27,7 +27,7 @@ sub param {
 	my ($self, $name, $val) = @_;
 	return $self->_param unless (wantarray || $name);
 	$self->_param({}) unless $self->_param;
-	$self->_param->{$name} = $val if (defined($val));
+	$self->_param->{$name} = $val if @_ == 3;
 	return $self->_param->{$name} if ($name);
 	return keys %{ $self->_param || {} };
 }

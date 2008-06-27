@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 22;
+use Test::More tests => 26;
 use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::Value::Snippet');
@@ -52,6 +52,9 @@ $req->set_params({ goo => 'woo' });
 is($req->param('foo'), undef);
 is_deeply(\%{ $req->param }, { goo => 'woo' });
 
+$req->param('a', undef);
+is_deeply(\%{ $req->param }, { goo => 'woo', a => undef });
+
 # todo: default_value, check, uncheck
 
 package T1;
@@ -72,3 +75,16 @@ is_deeply($obj->l->[0]->ch1, [ 284, 1 ]);
 $obj = T1->new({ dd => [ [ 1, 'A', 1 ], [ 2, 'B' ] ] });
 $obj->ht_merge_params(dd => 2);
 is_deeply($obj->dd, [ [ 1, 'A', "" ], [ 2, 'B', 1 ] ]);
+
+package T2;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV . "::EditBox", "eb1");
+__PACKAGE__->ht_add_widget(::HTV . "::EditBox", "eb2", keep_empty_string => 1);
+
+package main;
+
+$obj = T2->ht_load_from_params(eb1 => "", eb2 => "");
+is($obj->eb1, undef);
+is($obj->eb2, "");
+ok(exists $obj->{eb1});
+
