@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.38;
+our $VERSION = 0.39;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -106,13 +106,7 @@ sub ht_add_widget {
 	return $res;
 }
 
-=head2 ht_render(stash)
-
-Renders all of the contained controls into the stash.
-C<stash> should be hash reference.
-
-=cut
-sub ht_render {
+sub _ht_render_i {
 	my ($self, $stash, $parent_name) = @_;
 	for my $v (@{ $self->Widgets_List }) {
 		my $n = $v->name;
@@ -120,6 +114,14 @@ sub ht_render {
 		$v->render($self, $stash, $id);
 	}
 }
+
+=head2 ht_render(stash)
+
+Renders all of the contained controls into the stash.
+C<stash> should be hash reference.
+
+=cut
+sub ht_render { shift()->_ht_render_i(shift); }
 
 =head2 ht_find_widget($widget_name)
 
@@ -229,7 +231,8 @@ Makes query string from $uri and widget values.
 =cut
 sub ht_make_query_string {
 	my ($self, $uri, @widget_names) = @_;
-	return "$uri?" . join("&", map {
+	$uri .= ($uri =~ /\?/) ? "&" : "?";
+	return $uri . join("&", map {
 		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_)
 	} @widget_names);
 }

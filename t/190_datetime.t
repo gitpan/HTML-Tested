@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 32;
+use Test::More tests => 34;
 use DateTime;
 use DateTime::Duration;
 use HTML::Tested::Test::Request;
@@ -59,6 +59,10 @@ my $qs = $obj->ht_make_query_string("hello", "id", "e");
 like($qs, qr/^hello\?id/);
 unlike($qs, qr/555555/);
 like($qs, qr/&e=27\.10\.1976/);
+
+my $qs2 = $obj->ht_make_query_string("hello?a=b", "id", "e");
+like($qs2, qr/a=b&id/);
+unlike($qs2, qr/\?.*\?/);
 
 my $r = HTML::Tested::Test::Request->new;
 $r->parse_url($qs);

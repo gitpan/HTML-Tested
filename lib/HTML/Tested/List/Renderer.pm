@@ -13,7 +13,7 @@ sub render {
 	my $i = 1;
 	for my $row (@$rows) {
 		my $s = {};
-		$row->ht_render($s, $id . "__" . $i++);
+		$row->_ht_render_i($s, $id . "__" . $i++);
 		push @res, $s;
 	}
 	$stash->{$n} = \@res;

@@ -115,7 +115,7 @@ sub do_comparison {
 	my @res;
 	my $e_root = $class->bless_from_tree_for_test($obj_class
 			, $expected, \@res);
-	$e_root->ht_render($e_stash);
+	$e_root->_ht_render_i($e_stash);
 
 	push @res, $class->$compare($e_root, $stash, $e_stash);
 	return @res;

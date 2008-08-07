@@ -72,7 +72,7 @@ sub _do_one_value {
 sub finish_load {
 	my ($self, $root) = @_;
 	my @arr = grep { $_ } @{ $root->{ $self->name } };
-	$root->{ $self->name } = \@arr;
+	$root->{ $self->name } = \@arr unless $self->{keep_holes};
 	$_->_call_finish_load for @arr;
 }
 

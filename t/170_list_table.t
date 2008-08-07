@@ -1,12 +1,12 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 10;
+use Test::More tests => 12;
 use Data::Dumper;
-use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested::List'); 
 	use_ok('HTML::Tested::Value');
+	use_ok('HTML::Tested::Test');
 }
 
 package LR;
@@ -107,3 +107,16 @@ ENDS
 
 eval { HTML::Tested::Test->check_stash('L4', $stash, { l1 => [ {} ] }); };
 like($@, qr/No v3 found/);
+
+package HI;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget("HTML::Tested::Value", 'v');
+
+package H;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget('HTML::Tested::List', 'l', 'HI', keep_holes => 1);
+
+package main;
+my $obj = H->ht_load_from_params(l__2__v => 'a', l__4__v => 'b');
+is_deeply($obj->l, [ undef, { v => 'a' }, undef, { v => 'b' } ])
+	or diag(Dumper($obj));

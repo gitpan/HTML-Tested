@@ -1,12 +1,13 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 8;
+use Test::More tests => 17;
 use Data::Dumper;
 use HTML::Tested::Test;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV));
 	use_ok('HTML::Tested::Value::Link');
+	use_ok('HTML::Tested::Value::Marked');
 }
 
 HTML::Tested::Seal->instance('boo boo boo');
@@ -74,3 +75,53 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($object), $stash,
 my $s = $stash->{s};
 like($stash->{v}, qr/$s/);
 
+package H1;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV."::Marked", "a");
+
+package H2;
+use base 'H1';
+__PACKAGE__->ht_add_widget(::HTV."::Marked", "b");
+
+package main;
+my $h2 = H2->new({ a => 'A', b => 'B' });
+is($h2->a, 'A');
+is($h2->b, 'B');
+
+$stash = {};
+$h2->ht_render($stash, "some_app_dependent_important_parameter");
+is_deeply($stash, { a => '<!-- a --> A', b => '<!-- b --> B' })
+	or diag(Dumper($stash));
+
+package H3;
+use base 'H2';
+__PACKAGE__->ht_add_widget(::HTV."::Marked", "c", skip_undef => 1);
+
+sub ht_render {
+	my ($self, $stash, $p1, $p2) = @_;
+	$self->c($p2);
+	shift()->SUPER::ht_render(@_);
+}
+
+package main;
+my $h3 = H3->new({ a => 'A', b => 'B' });
+$stash = {};
+$h3->ht_render($stash, "p1", "p2");
+is_deeply($stash, { a => '<!-- a --> A', b => '<!-- b --> B'
+	, c => '<!-- c --> p2' }) or diag(Dumper($stash));
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($h3), 
+		$stash, { c => 'p2' }) ], []);
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($h3), 
+		$stash, { c => 'p4' }) ], [
+	'Mismatch at c: got "<!-- c --> p2", expected "<!-- c --> p4"'
+]);
+
+is_deeply([ HTML::Tested::Test->check_text(ref($h3), 
+		"foo <!-- c --> p2 foo", { c => 'p5' }) ], [
+	'Unable to find "<!-- c --> p5" in "foo <!-- c --> p2 foo"'
+]);
+
+is_deeply([ HTML::Tested::Test->check_text(ref($h3), 
+		"foo <!-- c --> p2 foo", { c => 'p2' }) ], []);
