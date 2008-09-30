@@ -12,6 +12,12 @@ sub merge_one_value {
 
 sub transform_value {
 	my ($self, $caller, $val) = @_;
+	goto OUT if (ref($val) eq 'ARRAY');
+
+	my $dv = $self->get_default_value($caller);
+	my @res = map { [ $_->[0], $_->[1], $_->[0] eq $val ] } @$dv;
+	$val = \@res;
+OUT:
 	return [ map { $self->SUPER::transform_value($caller, $_) } @$val ];
 }
 

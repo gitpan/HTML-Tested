@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 10;
+use Test::More tests => 13;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', "HTV"); 
@@ -60,6 +60,43 @@ is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
 <option value="1">a</option>
 <option value="2" selected>b&lt;</option>
+</select>
+ENDS
+
+package T2;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV."::DropDown", 'v', default_value => [
+		[ "A", "One" ], [ "B", "Two" ] ]);
+
+package main;
+
+$object = T2->new;
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<select id="v" name="v">
+<option value="A">One</option>
+<option value="B">Two</option>
+</select>
+ENDS
+
+$object->v('B');
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<select id="v" name="v">
+<option value="A">One</option>
+<option value="B" selected>Two</option>
+</select>
+ENDS
+
+$object->v(undef);
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<select id="v" name="v">
+<option value="A">One</option>
+<option value="B">Two</option>
 </select>
 ENDS
 
