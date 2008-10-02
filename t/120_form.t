@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 30;
+use Test::More tests => 32;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV HT)); 
@@ -182,8 +182,13 @@ __PACKAGE__->ht_add_widget(::HTV, v => is_integer => 1);
 
 package main;
 $object = T8->new({ v => 'a' });
-is_deeply([ $object->ht_validate ], [ [ v => type => 'integer' ] ]);
+is_deeply([ $object->ht_validate ], [ [ v => 'integer' ] ]);
 
 $object->v(12);
 is_deeply([ $object->ht_validate ], []);
 
+$object->v(undef);
+is_deeply([ $object->ht_validate ], []);
+
+$object->v('');
+is_deeply([ $object->ht_validate ], [ [ v => 'integer' ] ]);

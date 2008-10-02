@@ -212,9 +212,9 @@ sub validate {
 	my ($self, $val, $caller) = @_;
 	my $n = $self->name;
 	return () if $caller->ht_get_widget_option($n, "no_validate");
-	return ([ type => 'integer' ])
-		if ($caller->ht_get_widget_option($n, "is_integer")
-				&& $val !~ /^\d+$/);
+	return ([ 'integer' ]) if (defined($val)
+			&& $caller->ht_get_widget_option($n, "is_integer")
+			&& $val !~ /^\d+$/);
 	my $vs = $self->{validators};
 	my @res;
 	for (my $i = 0; $i < @$vs; $i++) {
