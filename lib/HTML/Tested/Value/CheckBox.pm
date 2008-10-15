@@ -13,7 +13,12 @@ sub transform_value {
 sub merge_one_value {
 	my ($self, $root, $val, @path) = @_;
 	my $n = $self->name;
-	push @{ $root->$n }, $val;
+	my $c = $root->$n;
+	if (!$c || !ref($c)) {
+		$root->$n($val);
+	} else {
+		push @{ $root->$n }, $val;
+	}
 }
 
 sub value_to_string {
@@ -22,6 +27,13 @@ sub value_to_string {
 	return <<ENDS
 <input type="checkbox" id="$name" name="$name" value="$val->[0]"$che />
 ENDS
+}
+
+sub finish_load {
+	my ($self, $root) = @_;
+	my $n = $self->name;
+	return if $root->$n || $root->ht_get_widget_option($n, "keep_undef");
+	$root->$n(0);
 }
 
 1;
