@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 31;
+use Test::More tests => 32;
 use Data::Dumper;
 use File::Temp qw(tempdir);
 use File::Slurp;
@@ -100,3 +100,12 @@ is($object->v->filename, "$td/c.txt");
 is($object->v->size, -s "$td/c.txt");
 is($object->v->name, "v");
 is(read_file($object->v->fh), "Hello\nworld\n");
+
+# try to render it with v inside: no error should be produced
+# useful for validation errors which reuse previous request
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<input type="file" id="v" name="v" />
+ENDS
+

@@ -22,6 +22,8 @@ sub absorb_one_value {
 	$root->{ $self->name } = $val;
 }
 
+sub prepare_value { return ''; }
+
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	return <<ENDS
