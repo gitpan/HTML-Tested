@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 13;
+use Test::More tests => 15;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested', "HTV"); 
@@ -99,4 +99,26 @@ is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <option value="B">Two</option>
 </select>
 ENDS
+
+$object->ht_merge_params(v => 'B');
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<select id="v" name="v">
+<option value="A">One</option>
+<option value="B" selected>Two</option>
+</select>
+ENDS
+
+$object->v('B');
+$object->ht_merge_params(v => 'A');
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
+<select id="v" name="v">
+<option value="A" selected>One</option>
+<option value="B">Two</option>
+</select>
+ENDS
+
 

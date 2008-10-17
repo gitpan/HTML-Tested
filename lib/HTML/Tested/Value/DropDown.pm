@@ -6,8 +6,13 @@ use base 'HTML::Tested::Value::Array';
 
 sub merge_one_value {
 	my ($self, $root, $val, @path) = @_;
-	my $v = $root->{ $self->name };
-	$_->[2] = $_->[0] eq $val for @$v;
+	my $n = $self->name;
+	my $v = $root->{$n};
+	if (ref($v)) {
+		$_->[2] = $_->[0] eq $val for @$v;
+	} else {
+		$root->{$n} = $self->transform_value($root, $val, @path);
+	}
 }
 
 sub transform_value {
