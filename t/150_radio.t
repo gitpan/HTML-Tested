@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 use Data::Dumper;
 use Carp;
 
@@ -174,3 +174,26 @@ ENDS
 ENDS
 });
 is_deeply($_def_val, [ 'a', [ 'b', 1 ] ]);
+
+
+package T3;
+use base 'HTML::Tested';
+__PACKAGE__->ht_add_widget(::HTV, 'v');
+
+package main;
+$object = T3->new({ v => "a\nb\nc\n" });;
+$object->ht_render($stash);
+
+is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
+		$stash, { v => "a\nc\n" }) ], [ 'Mismatch at v: got "a
+b
+c
+", expected "a
+c
+". The diff is
+@@ -1,2 +1,3 @@
+ a
++b
+ c
+'
+]);

@@ -23,5 +23,6 @@ WriteMakefile(
 		     'Data::Dumper' => '',
 		     'Template' => '',
 		     'Math::Combinatorics' => ''
+		     , 'Text::Diff' => ''
                     },
 );

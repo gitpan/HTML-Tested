@@ -4,6 +4,7 @@ use warnings FATAL => 'all';
 package HTML::Tested::Test;
 use base 'Exporter';
 use Data::Dumper;
+use Text::Diff;
 use Carp;
 
 our @EXPORT_OK = qw(Register_Widget_Tester Stash_Mismatch
@@ -11,9 +12,14 @@ our @EXPORT_OK = qw(Register_Widget_Tester Stash_Mismatch
 
 sub Stash_Mismatch {
 	my ($n, $res, $v) = @_;
-	return sprintf("Mismatch at %s: got %s, expected %s",
+	my $ret = sprintf("Mismatch at %s: got %s, expected %s",
 				$n, defined($res) ? "\"$res\"" : "undef",
 				defined($v) ? "\"$v\"" : "undef");
+	goto OUT unless (defined($res) && defined($v)
+		&& $res =~ /\n.*\n/ms && $v =~ /\n.*\n/ms);
+	$ret .= ". The diff is\n" . diff(\$v, \$res);
+OUT:
+	return $ret;
 }
 
 sub Ensure_Value_To_Check {
