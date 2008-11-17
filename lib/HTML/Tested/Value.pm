@@ -4,8 +4,8 @@ HTML::Tested::Value - Base class for most HTML::Tested widgets.
 
 =head1 DESCRIPTION
 
-This class provides the most basic HTML::Tested widget - simple value to be output in
-the template.
+This class provides the most basic HTML::Tested widget - simple value to be
+output in the template.
 
 =head1 METHODS
 
@@ -29,6 +29,15 @@ sub setup_datetime_option {
 	$opts->{is_datetime} = DateTime::Format::Strptime->new($dto);
 }
 
+=head2 $class->new($parent, $name, %opts)
+
+Creates new L<HTML::Tested::Value> named C<$name> at parent class C<$parent>.
+
+C<%opts> is a hash containing various options changing behaviour of this widget.
+
+See OPTIONS section for description of available options.
+
+=cut
 sub new {
 	my ($class, $parent, $name, %opts) = @_;
 	my $self = bless({ name => $name, _options => \%opts
@@ -174,8 +183,20 @@ the constraint and cookie is optional method for the application to recognize
 specific constraint.
 
 Available types are:
-C<regexp> - with OP being regexp string (e.g. [ regexp => '\d+' ].
-C<defined> - C<OP> doesn't matter here (e.g. [ defined => '' ].
+
+=over
+
+=item C<regexp>
+
+With OP being regexp string (or C<qr//> value) (e.g. [ regexp => '\d+' ] or [
+regexp => qr/\d+/ ]).
+
+=item C<defined>
+
+Ensures that the value is defined. C<OP> doesn't matter here
+(e.g. [ defined => '' ]).
+
+=back
 
 =cut
 sub push_constraint {
@@ -209,17 +230,18 @@ Validate is disabled if C<no_validate> widget option is set.
 
 =cut
 sub validate {
-	my ($self, $val, $caller) = @_;
+	my ($self, $caller) = @_;
 	my $n = $self->name;
+	my $val = $caller->$n;
 	return () if $caller->ht_get_widget_option($n, "no_validate");
-	return ([ 'integer' ]) if (defined($val)
+	return ([ $n, 'integer' ]) if (defined($val)
 			&& $caller->ht_get_widget_option($n, "is_integer")
 			&& $val !~ /^\d+$/);
 	my $vs = $self->{validators};
 	my @res;
 	for (my $i = 0; $i < @$vs; $i++) {
 		next if $vs->[$i]->($val);
-		push @res, $self->{constraints}->[$i];
+		push @res, [ $n, @{ $self->{constraints}->[$i] } ];
 	}
 	return @res;
 }
@@ -279,6 +301,20 @@ C<undef>.
 
 Normally, if widget value is C<undef>, the widget is rendered as blank value.
 When this option is set the widget will not appear in the stash at all.
+
+=item constraints
+
+Array reference containing widget value constraints. See C<push_constraint>
+documentation for the individual entry format.
+
+=item is_trusted
+
+Do not perform the escaping of special characters on the value. Improperly
+setting this option may result in XSS security breach.
+
+=item is_integer
+
+Ensures that the value is integer. 
 
 =back
 

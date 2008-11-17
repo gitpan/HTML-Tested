@@ -77,8 +77,16 @@ sub finish_load {
 }
 
 sub validate {
-	my ($self, $arr) = @_;
-	return map { ($_->ht_validate) } (@{ $arr || [] });
+	my ($self, $caller) = @_;
+	my $n = $self->name;
+	my $arr = $caller->$n || [];
+	my @res;
+	for (my $i = 0; $i < @$arr; $i++) {
+		push @res, map { [
+			sprintf('%s__%d__%s', $n, $i + 1, shift @$_), @$_
+		] } $arr->[$i]->ht_validate;
+	}
+	return @res;
 }
 
 1;

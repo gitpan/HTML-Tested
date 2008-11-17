@@ -1,13 +1,15 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 32;
+use Test::More tests => 38;
 use Data::Dumper;
+use Carp;
 
 BEGIN { use_ok('HTML::Tested', qw(HTV HT)); 
 	use_ok('HTML::Tested::Value::Form');
 	use_ok('HTML::Tested::Value::EditBox');
 	use_ok('HTML::Tested::List');
+	$SIG{__DIE__} = sub { confess(@_); };
 }
 
 package T;
@@ -63,8 +65,8 @@ package main;
 
 $object = T3->new;
 $object->a('ff');
-is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ]
-		, [ [ regexp => '^\d+$' ] ]);
+is_deeply([ $object->ht_find_widget('a')->validate($object) ]
+		, [ [ a => regexp => '^\d+$' ] ]);
 
 $object->a(undef);
 $stash = {};
@@ -114,19 +116,22 @@ package main;
 $object = T5->new;
 $stash = {};
 
-is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ], []);
+is_deeply([ $object->ht_find_widget('a')->validate($object) ], []);
 $object->ht_find_widget('a')->push_constraint([ regexp => '^\d+$' ]);
-is_deeply([ $object->ht_find_widget('a')->validate(undef, $object) ]
-		, [ [ regexp => '^\d+$' ] ]);
+is_deeply([ $object->ht_find_widget('a')->validate($object) ]
+		, [ [ 'a', regexp => '^\d+$' ] ]);
 $object->a(5);
-is_deeply([ $object->ht_find_widget('a')->validate(5, $object) ], []);
+is_deeply([ $object->ht_find_widget('a')->validate($object) ], []);
 
 $object->ht_find_widget('b')->push_constraint([ 'defined' => '' ]);
-is_deeply([ $object->ht_find_widget('b')->validate(undef, $object) ]
-		, [ [ 'defined' => '' ] ]);
-is_deeply([ $object->ht_find_widget('b')->validate('', $object) ], []);
-is_deeply([ $object->ht_find_widget('b')->validate(0, $object) ], []);
+is_deeply([ $object->ht_find_widget('b')->validate($object) ]
+		, [ [ b => 'defined' => '' ] ]);
+$object->b('');
+is_deeply([ $object->ht_find_widget('b')->validate($object) ], []);
+$object->b(0);
+is_deeply([ $object->ht_find_widget('b')->validate($object) ], []);
 
+$object->b('');
 $object->ht_render($stash);
 is_deeply($stash, { v => <<'ENDS'
 <form id="v" name="v" method="post" action="u" enctype="multipart/form-data">
@@ -142,20 +147,37 @@ ENDB
 package T6;
 use base 'HTML::Tested';
 __PACKAGE__->ht_add_widget(::HTV."::EditBox", 'a', constraints => [
-	[ regexp => 'a' ], [ regexp => 'b' ]
+	[ regexp => 'a' ], [ regexp => qr/b/ ]
 ]);
 
 package main;
 
-is_deeply([ T6->ht_find_widget('a')->validate('a', 'T6') ]
-		, [ [ regexp => 'b' ] ]);
-is_deeply([ T6->ht_find_widget('a')->validate('b', 'T6') ]
-		, [ [ regexp => 'a' ] ]);
-is_deeply([ T6->ht_find_widget('a')->validate('ba', 'T6') ], []);
+$object = T6->new;
+$object->a('a');
+
+is_deeply([ T6->ht_find_widget('a')->validate($object) ]
+		, [ [ a => regexp => qr/b/ ] ]);
+$object->a('b');
+is_deeply([ T6->ht_find_widget('a')->validate($object) ]
+		, [ [ a => regexp => 'a' ] ]);
+$object->a('ba');
+is_deeply([ T6->ht_find_widget('a')->validate($object) ], []);
 
 $object = T6->new;
-is_deeply([ $object->ht_validate ], [ [ a => regexp => 'a' ]
-					, [ a => regexp => 'b' ] ]);
+my @val = $object->ht_validate;
+is_deeply([ @val ], [ [ a => regexp => 'a' ], [ a => regexp => qr/b/ ] ]);
+my $err = T6->ht_encode_errors(@val);
+is($err, 'a:regexp,a:regexp');
+
+$stash = {};
+$object->a('bbb');
+$object->ht_render($stash);
+is_deeply($stash, { a => '<input type="text" name="a" id="a" value="bbb" />'
+	. "\n" }) or diag(Dumper($stash));
+
+T6->ht_error_render($stash, 'foo_e', $err);
+is_deeply($stash, { a => '<input type="text" name="a" id="a" value="bbb" />'
+	. "\n", foo_e => { a => 'regexp' } }) or diag(Dumper($stash));
 
 package T7;
 use base 'HTML::Tested';
@@ -167,10 +189,34 @@ is_deeply([ $object->ht_validate ], []);
 
 $object = T7->new({ l1 => [ T6->new({ a => 'bbb' }) ] });
 my $res = [ $object->ht_validate ];
-is_deeply($res, [ [ l1 => a => regexp => 'a' ] ]) or diag(Dumper($res));
+is_deeply($res, [ [ l1__1__a => regexp => 'a' ] ]) or diag(Dumper($res));
 
 $object->l1->[0]->a("bab");
 is_deeply([ $object->ht_validate ], []);
+
+push @{ $object->l1 }, T6->new({ a => 'aaa' });
+$res = [ $object->ht_validate ];
+is_deeply($res, [ [ l1__2__a => regexp => qr/b/ ] ]) or diag(Dumper($res));
+
+$stash = {};
+$object->ht_render($stash);
+is_deeply($stash, { l1 => [ {
+	a => '<input type="text" name="l1__1__a" id="l1__1__a" value="bab" />'
+		. "\n"
+}, {
+	a => '<input type="text" name="l1__2__a" id="l1__2__a" value="aaa" />'
+		. "\n"
+} ] }) or diag(Dumper($stash));
+
+$object->ht_error_render($stash, 'bar_e', T6->ht_encode_errors(@$res));
+is_deeply($stash, { l1 => [ {
+	a => '<input type="text" name="l1__1__a" id="l1__1__a" value="bab" />'
+		. "\n"
+}, {
+	a => '<input type="text" name="l1__2__a" id="l1__2__a" value="aaa" />'
+		. "\n"
+	, bar_e => { a => 'regexp' }
+} ] }) or diag(Dumper($stash));
 
 T6->ht_set_widget_option("a", "no_validate", 1);
 $object->l1->[0]->a("bb");

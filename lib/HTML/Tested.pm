@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = 0.45;
+our $VERSION = 0.46;
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -86,6 +86,9 @@ C<@widget_args> are passed as is into $widget_class->new function.
 For example, A->ht_add_widget("HTML::Tested::Value", "a", default_value => "b");
 will create value widget (and corresponding C<a> accessor) in A class which
 will have default value "b".
+
+See widget C<new> function documentation for relevant C<@widget_args> values
+(most of them are documented in L<HTML::Tested::Value> class).
 
 =cut
 sub ht_add_widget {
@@ -216,12 +219,7 @@ Prepends the names of the widgets which failed validation into result arrays.
 =cut
 sub ht_validate {
 	my $self = shift;
-	my @res;
-	for my $v (@{ $self->Widgets_List }) {
-		my $n = $v->name;
-		push @res, map { [ $n, @$_ ] } $v->validate($self->$n, $self);
-	}
-	return @res;
+	return map { $_->validate($self) } @{ $self->Widgets_List };
 }
 
 =head2 $root->ht_make_query_string($uri, @widget_names)
@@ -249,6 +247,28 @@ setting its C<checked> state.
 sub ht_merge_params {
 	my ($self, %params) = @_;
 	$self->_for_each_arg_set_one("merge_one_value", %params);
+}
+
+sub ht_encode_errors {
+	my ($class, @errs) = @_;
+	return join(",", map { $_->[0] . ":" . $_->[1] } @errs);
+}
+
+sub _error_one {
+	my ($self, $stash, $var_name, $n, $v) = @_;
+	my @ns = split('__', $n);
+	while (@ns > 1) {
+		my $ln = shift @ns;
+		my $lidx = shift @ns;
+
+		$stash = $stash->{$ln}->[ $lidx - 1 ];
+	}
+	$stash->{$var_name}->{ $ns[0] } = $v;
+}
+
+sub ht_error_render {
+	my ($self, $stash, $var_name, $err) = @_;
+	$self->_error_one($stash, $var_name, split(':')) for split(',', $err);
 }
 
 1;
