@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 63;
+use Test::More tests => 66;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested');
@@ -26,10 +26,10 @@ isnt($v, "hello");
 is($s->decrypt($v), "hello");
 is($s->decrypt("dskdskd"), undef);
 
-is($s->encrypt("hello"), $v);
+my $sec = HTML::Tested::Seal->instance->encrypt('secret');
 
-# And length is per 8 byte block
-is(length($v), length($s->encrypt("hello1")));
+is($s->encrypt("hello"), $v);
+cmp_ok(length($v), '<=', length($s->encrypt("hello1")));
 
 # And we confess
 eval { $s->encrypt(undef); };
@@ -229,6 +229,9 @@ ok($stash->{v} =~ /id=(\w+)/);
 $res = T->ht_load_from_params(v => $1);
 is($res->v, 'go<');
 
+my $sec2 = HTML::Tested::Seal->instance->encrypt('secret');
+is($sec2, $sec);
+
 undef $HTML::Tested::Seal::_instance;
 
 HTML::Tested::Seal->instance('hrhr');
@@ -283,3 +286,8 @@ is($s2->{v}, $s2->{l}->[0]->{b});
 
 $object->ht_render($s2);
 is($s2->{v}, $s2->{l}->[0]->{b});
+
+undef $HTML::Tested::Seal::_instance;
+HTML::Tested::Seal->instance('boo boo boo');
+is(HTML::Tested::Seal->instance->decrypt($sec2), 'secret');
+is(HTML::Tested::Seal->instance->decrypt($sec), 'secret');

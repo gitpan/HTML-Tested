@@ -4,8 +4,9 @@ use warnings FATAL => 'all';
 package HTML::Tested::Seal;
 use base 'Class::Singleton';
 use Crypt::CBC;
-use Digest::CRC qw(crc32);
+use Digest::CRC qw(crc8);
 use Carp;
+use bytes;
 
 sub _new_instance {
 	my ($class, $key) = @_;
@@ -22,8 +23,8 @@ sub _new_instance {
 sub encrypt {
 	my ($self, $data) = @_;
 	confess "# No data to encrypt given!" unless defined($data);
-	my $c = crc32($data);
-	return $self->{_cipher}->encrypt_hex(pack("La*", $c, $data));
+	my $c = crc8($data);
+	return $self->{_cipher}->encrypt_hex(pack("Ca*", $c, $data));
 }
 
 sub decrypt {
@@ -32,9 +33,9 @@ sub decrypt {
 	eval { $d = $self->{_cipher}->decrypt_hex($data) };
 	return undef unless defined($d);
 
-	my ($c, $res) = unpack("La*", $d);
+	my ($c, $res) = unpack("Ca*", $d);
 	return undef unless (defined($c) && defined($res));
-	my $c1 = crc32($res);
+	my $c1 = crc8($res);
 	return $c1 == $c ? $res : undef;
 }
 
