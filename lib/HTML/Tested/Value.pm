@@ -196,6 +196,13 @@ regexp => qr/\d+/ ]).
 Ensures that the value is defined. C<OP> doesn't matter here
 (e.g. [ defined => '' ]).
 
+=item C<any user-defined string>
+
+Any user defined constraint - second parameter should be function to call.
+It gets the value and the caller as the arguments.
+
+For example [ 'my_foo' => sub { my ($v, $caller) = @_; return is_ok? } ].
+
 =back
 
 =cut
@@ -213,6 +220,8 @@ sub push_constraint {
 		};
 	} elsif ($c->[0] eq 'defined') {
 		$func = sub { return defined($_[0]); };
+	} elsif ($c->[1]) {
+		$func = $c->[1];
 	} else {
 		confess "Unknown type " . $c->[0] . " found!\n";
 	}
@@ -240,7 +249,7 @@ sub validate {
 	my $vs = $self->{validators};
 	my @res;
 	for (my $i = 0; $i < @$vs; $i++) {
-		next if $vs->[$i]->($val);
+		next if $vs->[$i]->($val, $caller);
 		push @res, [ $n, @{ $self->{constraints}->[$i] } ];
 	}
 	return @res;
