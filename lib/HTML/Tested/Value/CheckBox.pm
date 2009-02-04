@@ -23,7 +23,7 @@ sub merge_one_value {
 
 sub value_to_string {
 	my ($self, $name, $val) = @_;
-	my $che = $val->[1] ? " checked" : "";
+	my $che = $val->[1] ? " checked=\"1\"" : "";
 	return <<ENDS
 <input type="checkbox" id="$name" name="$name" value="$val->[0]"$che />
 ENDS

@@ -30,25 +30,25 @@ push @{ $object->v }, 1;
 is_deeply($object->v, [ 1, 1 ]);
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<input type="checkbox" id="v" name="v" value="1" checked />
+<input type="checkbox" id="v" name="v" value="1" checked="1" />
 ENDS
 
 $object->v->[0] = "1\"f'";
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<input type="checkbox" id="v" name="v" value="1&quot;f&#39;" checked />
+<input type="checkbox" id="v" name="v" value="1&quot;f&#39;" checked="1" />
 ENDS
 
 $object->v->[0] = '1&';
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<input type="checkbox" id="v" name="v" value="1&amp;" checked />
+<input type="checkbox" id="v" name="v" value="1&amp;" checked="1" />
 ENDS
 
 $object->v(1);
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
-<input type="checkbox" id="v" name="v" value="1" checked />
+<input type="checkbox" id="v" name="v" value="1" checked="1" />
 ENDS
 
 $object->v(undef);
@@ -90,8 +90,8 @@ $object->ht_render($stash);
 is_deeply($stash, {
 	c1 => '<input type="checkbox" id="c1" name="c1" value="1" />' . "\n"
 	, c2 => '<input type="checkbox" id="c2" name="c2" value="1" />' . "\n"
-	, c3 => '<input type="checkbox" id="c3" name="c3" value="1" checked />'
-			. "\n"
+	, c3 => '<input type="checkbox" id="c3" name="c3" value="1"'
+		. ' checked="1" />' . "\n"
 }) or diag(Dumper($stash));
 
 $object->ht_merge_params(c1 => 1, c2 => 1, c3 => 1);
