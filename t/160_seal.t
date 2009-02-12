@@ -1,10 +1,11 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 66;
+use Test::More tests => 69;
 use Data::Dumper;
 
-BEGIN { use_ok('HTML::Tested');
+BEGIN { use_ok('HTML::Tested::Seal');
+	use_ok('HTML::Tested');
 	use_ok('HTML::Tested::Test');
 	use_ok('HTML::Tested::Test::Request');
 	use_ok('HTML::Tested::Value::Hidden');
@@ -25,6 +26,7 @@ my $v = $s->encrypt("hello");
 isnt($v, "hello");
 is($s->decrypt($v), "hello");
 is($s->decrypt("dskdskd"), undef);
+is(length($s->encrypt(1)), 16);
 
 my $sec = HTML::Tested::Seal->instance->encrypt('secret');
 
@@ -291,3 +293,10 @@ undef $HTML::Tested::Seal::_instance;
 HTML::Tested::Seal->instance('boo boo boo');
 is(HTML::Tested::Seal->instance->decrypt($sec2), 'secret');
 is(HTML::Tested::Seal->instance->decrypt($sec), 'secret');
+
+undef $HTML::Tested::Seal::_instance;
+my $en1 = HTML::Tested::Seal->instance('boo')->encrypt('foo');
+
+undef $HTML::Tested::Seal::_instance;
+my $en2 = HTML::Tested::Seal->instance('boo')->encrypt('foo');
+is($en1, $en2);

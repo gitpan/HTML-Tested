@@ -4,20 +4,10 @@ use warnings FATAL => 'all';
 package HTML::Tested::Test::Value;
 use HTML::Tested::Test qw(Ensure_Value_To_Check Stash_Mismatch);
 
-my $_seal_prefix;
-
 sub _replace_sealed {
 	my ($class, $val) = @_;
-	if (!$_seal_prefix) {
-		my $s = HTML::Tested::Seal->instance->encrypt('aaa');
-		$_seal_prefix = substr($s, 0, 7);
-	}
-	while ($val =~ /($_seal_prefix\w+)/g) {
-		my $found = $1;
-		my $r = HTML::Tested::Seal->instance->decrypt($found);
-		$r = 'ENCRYPTED' unless defined($r);
-		$val =~ s/$found/$r/;
-	}
+	my $s = HTML::Tested::Seal->instance;
+	$val =~ s#([0-9a-f]{16}[0-9a-f]*)#$s->decrypt($1) // 'ENCRYPTED'#eg;
 	return $val;
 }
 
