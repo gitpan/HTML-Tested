@@ -151,13 +151,12 @@ sub _tree_to_param_fallback {
 sub convert_tree_to_param {
 	my ($class, $obj_class, $r, $tree, $parent_name) = @_;
 	while (my ($n, $v) = each %$tree) {
-		$v = HTML::Tested::Seal->instance->encrypt($v)
-			if ($n =~ s/^HT_SEALED_//);
+		my $sealit = ($n =~ s/^HT_SEALED_//);
 		my $wc = $obj_class->ht_find_widget($n);
 		if ($wc) {
-			$wc->__ht_tester->_convert_to_param($wc, $r, 
-				$parent_name ? $parent_name . "__$n" : $n
-				, $v);
+			$v = $wc->__ht_tester->convert_to_sealed($v) if $sealit;
+			$wc->__ht_tester->convert_to_param($wc, $r, 
+				$parent_name ? $parent_name . "__$n" : $n, $v);
 		} else {
 			$class->_tree_to_param_fallback($n);
 		}

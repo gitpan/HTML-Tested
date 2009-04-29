@@ -57,7 +57,7 @@ sub bless_from_tree {
 				, $_, $err); } @$p ];
 }
 
-sub _convert_to_param {
+sub convert_to_param {
 	my ($class, $obj_class, $r, $name, $val) = @_;
 	my $c = $obj_class->containee;
 	HTML::Tested::Test->convert_tree_to_param(

@@ -101,9 +101,14 @@ sub check_text {
 			, $e_stash->{$name}, $text);
 }
 
-sub _convert_to_param {
+sub convert_to_param {
 	my ($class, $obj_class, $r, $name, $val) = @_;
 	$r->param($name, $val);
+}
+
+sub convert_to_sealed {
+	my ($class, $val) = @_;
+	return HTML::Tested::Seal->instance->encrypt($val);
 }
 
 1;

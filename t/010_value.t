@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 46;
+use Test::More tests => 47;
 use Data::Dumper;
 use HTML::Tested::Test::Request;
 
@@ -166,6 +166,8 @@ is_deeply(\@_uv, \@_sv);
 my @_e;
 my $_ms = 1;
 
+my $seal = HTML::Tested::Seal->instance('aaa');
+
 package TVT;
 use base 'HTML::Tested::Test::Value';
 
@@ -179,10 +181,20 @@ sub handle_sealed {
 	$class->SUPER::handle_sealed($e_root, $name, $e_val, $r_val, \@_e);
 }
 
+sub convert_to_sealed {
+	my ($self, $val) = @_;
+	return [ map { $seal->encrypt($_) } @$val ];
+}
+
+sub convert_to_param {
+	my ($class, $obj_class, $r, $name, $val) = @_;
+	return $class->SUPER::convert_to_param($obj_class, $r, $name
+			, join("|", @$val));
+}
+
 package main;
 Register_Widget_Tester('TV', 'TVT');
 
-HTML::Tested::Seal->instance('aaa');
 is_deeply([ HTML::Tested::Test->check_stash('T5', $stash, {
 		HT_SEALED_tv => 'a' }) ], []);
 is_deeply(\@_e, [ "tv wasn't sealed a" ]);
@@ -224,3 +236,8 @@ is_deeply($stash, {}) or diag(Dumper($stash));
 is_deeply([ HTML::Tested::Test->check_stash(ref($object), 
 	$stash, { HT_SEALED_uv => '' }) ]
 		, [ 'Mismatch at uv: got undef, expected ""' ]);
+
+$req = HTML::Tested::Test::Request->new;
+HTML::Tested::Test->convert_tree_to_param('T5', $req
+		, { HT_SEALED_tv => [ "a", "b" ] });
+is($req->param("tv"), $seal->encrypt("a") . "|" . $seal->encrypt("b"));
