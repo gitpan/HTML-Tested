@@ -38,6 +38,7 @@ sub new {
 sub name { return shift()->{name}; }
 sub renderers { return shift()->{renderers}; }
 sub options { return {}; }
+sub _get_option { return undef; }
 
 sub render {
 	my ($self, $caller, $stash, $id) = @_;

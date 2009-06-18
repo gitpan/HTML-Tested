@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 69;
+use Test::More tests => 70;
 use Data::Dumper;
 
 BEGIN { use_ok('HTML::Tested::Seal');
@@ -300,3 +300,10 @@ my $en1 = HTML::Tested::Seal->instance('boo')->encrypt('foo');
 undef $HTML::Tested::Seal::_instance;
 my $en2 = HTML::Tested::Seal->instance('boo')->encrypt('foo');
 is($en1, $en2);
+
+my @res;
+for (1 .. 100) {
+	undef $HTML::Tested::Seal::_instance;
+	push @res, HTML::Tested::Seal->instance($_)->encrypt('foo');
+}
+is(@res, 100);

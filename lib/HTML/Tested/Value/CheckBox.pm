@@ -5,9 +5,9 @@ package HTML::Tested::Value::CheckBox;
 use base 'HTML::Tested::Value::Array';
 
 sub transform_value {
-	my ($self, $caller, $val) = @_;
+	my ($self, $caller, $val, $n) = @_;
 	$val = [ 1, $val ] if (!$val || !ref($val));
-	return $self->SUPER::transform_value($caller, $val);
+	return $self->SUPER::transform_value($caller, $val, $n);
 }
 
 sub merge_one_value {

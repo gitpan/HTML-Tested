@@ -93,7 +93,6 @@ $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => 'b' }) or diag(Dumper($stash));
 
-
 $object = T3->new({ v => 'b' });
 $stash = {};
 $object->ht_render($stash);

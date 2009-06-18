@@ -27,6 +27,7 @@ sub setup_datetime_option {
 	confess "Unable to use DateTime::Format::Strptime: $@" if $@;
 	$dto = { pattern => $dto } unless ref($dto);
 	$opts->{is_datetime} = DateTime::Format::Strptime->new($dto);
+	$self->compile;
 }
 
 =head2 $class->new($parent, $name, %opts)
@@ -48,6 +49,15 @@ sub new {
 	my $dto = $self->options->{is_datetime};
 	$self->setup_datetime_option($dto) if $dto;
 	return $self;
+}
+
+sub _get_option {
+	my ($self, $caller, $wname, $opname) = @_;
+	if ($caller && ref($caller)) {
+		my $n = "__ht__$wname\_$opname";
+		return $caller->{$n} if exists $caller->{$n};
+	}
+	return $self->options->{$opname};
 }
 
 =head2 $widget->name
@@ -92,14 +102,9 @@ sub encode_value {
 }
 
 sub get_default_value {
-	my ($self, $caller, $id) = @_;
-	my $res = $caller->ht_get_widget_option(
-			$self->name, "default_value");
-	return defined($res)
-			?  ref($res) eq 'CODE'
-				? $res->($self, $id, $caller) : $res
-			: $caller->ht_get_widget_option(
-				$self->name, "skip_undef") ? undef : '';
+	my ($self, $caller, $n) = @_;
+	my $func = $caller->{"__$n\_defval"} || $self->{__defval};
+	return $func->($self, $n, $caller);
 }
 
 =head2 $widget->get_value($caller, $id)
@@ -110,10 +115,8 @@ widget.
 
 =cut
 sub get_value {
-	my ($self, $caller, $id) = @_;
-	my $n = $self->name;
-	my $val = $caller->$n;
-	return defined($val) ? $val : $self->get_default_value($caller, $id);
+	my ($self, $caller, $id, $n) = @_;
+	return $caller->{$n} // $self->get_default_value($caller, $n);
 }
 
 =head2 $widget->seal_value($value, $caller)
@@ -132,42 +135,36 @@ sub seal_value {
 }
 
 sub transform_value {
-	my ($self, $caller, $val) = @_;
-	my $n = $self->name;
-	my $dtfs = $caller->ht_get_widget_option($n, "is_datetime");
-	$val = $dtfs->format_datetime($val) if ($val && $dtfs);
-
-	$val = $self->seal_value($val, $caller)
-		if $caller->ht_get_widget_option($n, "is_sealed");
-
-	$val = $self->encode_value($val, $caller)
-		if !($dtfs || $caller->ht_get_widget_option($n, "is_trusted"));
-	return $val;
+	my ($self, $caller, $val, $n) = @_;
+	my $func = $caller->{"__$n\_transform"} || $self->{__transform};
+	return $func->($self, $val, $caller, $n);
 }
 
 sub prepare_value {
-	my ($self, $caller, $id) = @_;
-	my $val = $self->get_value($caller, $id);
+	my ($self, $caller, $id, $n) = @_;
+	my $val = $self->get_value($caller, $id, $n);
 	return undef unless defined($val);
-	return $self->transform_value($caller, $val);
+	return $self->transform_value($caller, $val, $n);
 }
 
-=head2 $widget->render($caller, $stash, $id)
+sub _render_i {
+	my ($self, $caller, $stash, $id, $n) = @_;
+	my $val = $self->prepare_value($caller, $id, $n);
+	return unless defined($val);
+	return $self->value_to_string($id, $val, $caller, $stash);
+}
+
+=head2 $widget->render($caller, $stash, $id, $name)
 
 Renders widget into $stash. For HTML::Tested::Value it essentially means
-assigning $stash->{ $widget->name } with $widget->get_value.
+assigning $stash->{ $name } with $widget->get_value.
 
 =cut
 sub render {
-	my ($self, $caller, $stash, $id) = @_;
-	my $res = '';
-	my $n = $self->name;
-	goto OUT if $caller->ht_get_widget_option($n, "is_disabled");
-	my $val = $self->prepare_value($caller, $id);
-	return unless defined($val);
-	$res = $self->value_to_string($id, $val, $caller, $stash);
-OUT:
-	$stash->{$n} = $res;
+	my ($self, $caller, $stash, $id, $n) = @_;
+	my $func = $caller->{"__$n\_render"} || $self->{__render};
+	my $res = $func->($self, $caller, $stash, $id, $n);
+	$stash->{$n} = $res if defined($res);
 }
 
 sub bless_from_tree { return $_[1]; }
@@ -277,6 +274,51 @@ sub absorb_one_value {
 	$val = $dtfs->parse_datetime($val) if $dtfs;
 	$root->{ $self->name } = (defined($val) && $val eq ""
 			&& !$self->options->{keep_empty_string}) ? undef : $val;
+}
+
+sub _set_callback {
+	my ($self, $caller, $n, $what, $func) = @_;
+	my $obj = ($caller && ref($caller)) ? $caller : $self;
+	my $key = ($caller && ref($caller)) ? "__$n\_$what" : "__$what";
+	$obj->{$key} = $func;
+}
+
+sub _trans_datetime {
+	my ($self, $dtfs, $val, $caller, $n) = @_;
+	return $dtfs->format_datetime($val) if $val;
+}
+
+sub compile {
+	my ($self, $caller) = @_;
+	my $n = $self->name;
+	my $trans = $self->can('encode_value');
+	my $func = $self->can('_render_i');
+	my $defval = sub { return '' };
+	if ($self->_get_option($caller, $n, 'is_disabled')) {
+		$func = $defval;
+	} elsif (my $dtfs = $self->_get_option($caller, $n, "is_datetime")) {
+		$trans = sub { return shift()->_trans_datetime($dtfs, @_); };
+	} elsif ($self->_get_option($caller, $n, "is_sealed")) {
+		$trans = sub {
+			my $this = shift;
+			my $val = shift;
+			$val = $this->seal_value($val, @_);
+			return $this->encode_value($val, @_);
+		};
+	} elsif ($self->_get_option($caller, $n, "is_trusted")) {
+		$trans = sub { return $_[1]; };
+	}
+
+	my $dval = $self->_get_option($caller, $n, "default_value");
+	if (defined($dval)) {
+		$defval = ref($dval) eq 'CODE' ? $dval : sub { return $dval; };
+	} elsif ($self->_get_option($caller, $n, "skip_undef")) {
+		$defval = sub { return undef; };
+	}
+
+	$self->_set_callback($caller, $n, 'render', $func);
+	$self->_set_callback($caller, $n, 'transform', $trans);
+	$self->_set_callback($caller, $n, 'defval', $defval);
 }
 
 1;

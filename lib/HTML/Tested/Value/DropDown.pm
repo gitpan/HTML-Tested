@@ -11,19 +11,19 @@ sub merge_one_value {
 	if (ref($v)) {
 		$_->[2] = $_->[0] eq $val for @$v;
 	} else {
-		$root->{$n} = $self->transform_value($root, $val, @path);
+		$root->{$n} = $self->transform_value($root, $val, $n);
 	}
 }
 
 sub transform_value {
-	my ($self, $caller, $val) = @_;
+	my ($self, $caller, $val, $n) = @_;
 	goto OUT if (ref($val) eq 'ARRAY');
 
-	my $dv = $self->get_default_value($caller);
+	my $dv = $self->get_default_value($caller, $n);
 	my @res = map { [ $_->[0], $_->[1], $_->[0] eq $val ] } @$dv;
 	$val = \@res;
 OUT:
-	return [ map { $self->SUPER::transform_value($caller, $_) } @$val ];
+	return [ map { $self->SUPER::transform_value($caller, $_, $n) } @$val ];
 }
 
 sub value_to_string {

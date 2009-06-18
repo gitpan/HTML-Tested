@@ -7,7 +7,7 @@ use base 'HTML::Tested::Value';
 sub render {
 	my ($self, $caller, $stash, $id) = @_;
 	my $n = $self->name;
-	my $val = $self->get_value($caller, $id) or return;
+	my $val = $self->get_value($caller, $id, $n) or return;
 	for my $v (@$val) {
 		my $ch = '';
 		my $opt;

@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 34;
+use Test::More tests => 35;
 use DateTime;
 use DateTime::Duration;
 use HTML::Tested::Test::Request;
@@ -17,6 +17,7 @@ BEGIN { use_ok('HTML::Tested', 'HTV');
 	use_ok('HTML::Tested::Test');
 }
 
+$SIG{__DIE__} = sub { confess(@_); };
 HTML::Tested::Seal->instance('boo boo boo');
 
 package T;
@@ -79,8 +80,14 @@ $r->dir_config("Moo", undef);
 is($r->dir_config("Moo"), undef);
 
 T2->ht_add_widget(::HTV, 'd');
+T2->ht_set_widget_option(id => skip_undef => 1);
 T2->ht_find_widget('d')->setup_datetime_option('%x');
 is(T2->ht_find_widget('d')->options->{is_datetime}->pattern, '%x');
+
+$obj = T2->new({ d => $dt });
+$stash = {};
+$obj->ht_render($stash);
+is_deeply($stash, { d => 'Oct 16, 1964', e => '' });
 
 my $opts = {};
 T2->ht_find_widget('d')->setup_datetime_option('%c', $opts);

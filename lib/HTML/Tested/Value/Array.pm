@@ -17,7 +17,7 @@ sub new {
 }
 
 sub transform_value {
-	my ($self, $caller, $val) = @_;
+	my ($self, $caller, $val, $n) = @_;
 	confess "Invalid non-array value: seal_value"
 		unless $val && ref($val) eq 'ARRAY';
 	my $opts = $self->options;
@@ -25,7 +25,14 @@ sub transform_value {
 	for (my $i = 0; $i < @$val; $i++) {
 		my $nopts = $opts->{$i};
 		$self->{_options} = $nopts if $nopts;
-		push @res, $self->SUPER::transform_value($caller, $val->[$i]);
+		my $v = $val->[$i];
+		my $dtfs = $caller->ht_get_widget_option($n, "is_datetime");
+		$v = $dtfs->format_datetime($v) if ($v && $dtfs);
+		$v = $self->seal_value($v, $caller)
+			if $caller->ht_get_widget_option($n, "is_sealed");
+		$v = $self->encode_value($v, $caller)
+			if !($caller->ht_get_widget_option($n, "is_trusted"));
+		push @res, $v;
 		$self->{_options} = $opts if $nopts;
 	}
 	return \@res;

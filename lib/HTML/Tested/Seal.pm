@@ -13,7 +13,7 @@ sub _new_instance {
 	my ($class, $key) = @_;
 	my $self = bless({}, $class);
 	confess "No key!" unless $key;
-	my ($iv) = (md5($key) =~ /^(.{8})/);
+	my $iv = substr(md5($key), 0, 8);
 	my $c = Crypt::CBC->new(-key => $key, -cipher => 'Blowfish'
 			, -iv => $iv, -header => 'none');
 	confess "No cipher!" unless $c;

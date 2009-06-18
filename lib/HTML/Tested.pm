@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = '0.51';
+our $VERSION = '0.52';
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -106,6 +106,7 @@ sub ht_add_widget {
 	my %wh = %{ $class->_Widgets_Hash || {} };
 	$wh{ $res->name } = $res;
 	$class->_Widgets_Hash(\%wh);
+	$res->compile($class) if $res->can('compile');
 	return $res;
 }
 
@@ -114,7 +115,7 @@ sub _ht_render_i {
 	for my $v (@{ $self->Widgets_List }) {
 		my $n = $v->name;
 		my $id = $parent_name ? $parent_name . "__$n" : $n;
-		$v->render($self, $stash, $id);
+		$v->render($self, $stash, $id, $n);
 	}
 }
 
@@ -183,14 +184,9 @@ Gets option C<$option_name> for widget named C<$widget_name>.
 
 =cut
 sub ht_get_widget_option {
-	my ($self, $wname, $opname) = @_;
-	my $w = $self->ht_find_widget($wname)
-		or confess "Unknown widget $wname";
-	if (ref($self)) {
-		my $n = "__ht__$wname\_$opname";
-		return $self->{$n} if exists $self->{$n};
-	}
-	return $w->options->{$opname};
+	my ($self, $wn, $opname) = @_;
+	my $w = $self->ht_find_widget($wn) or confess "Unknown widget $wn";
+	return $w->_get_option($self, $wn, $opname);
 }
 
 =head2 ht_set_widget_option($widget_name, $option_name, $value)
@@ -207,6 +203,7 @@ sub ht_set_widget_option {
 	} else {
 		$w->options->{$opname} = $val;
 	}
+	$w->compile($self);
 }
 
 =head2 $root->ht_validate
@@ -231,7 +228,7 @@ sub ht_make_query_string {
 	my ($self, $uri, @widget_names) = @_;
 	$uri .= ($uri =~ /\?/) ? "&" : "?";
 	return $uri . join("&", map {
-		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_)
+		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_, $_)
 	} @widget_names);
 }
 
