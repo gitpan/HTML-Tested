@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                HTML-Tested
-version:             0.52
+version:             0.53
 abstract:            This module allows creation of different HTML widgets with the built-in means of testing them
 license:             ~
 author:              

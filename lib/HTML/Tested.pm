@@ -66,7 +66,7 @@ use warnings FATAL => 'all';
 package HTML::Tested;
 use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
 use Carp;
-our $VERSION = '0.52';
+our $VERSION = '0.53';
 
 our @EXPORT_OK = qw(HT HTV);
 
@@ -226,6 +226,7 @@ Makes query string from $uri and widget values.
 =cut
 sub ht_make_query_string {
 	my ($self, $uri, @widget_names) = @_;
+	return $uri unless @widget_names;
 	$uri .= ($uri =~ /\?/) ? "&" : "?";
 	return $uri . join("&", map {
 		"$_=" . $self->ht_find_widget($_)->prepare_value($self, $_, $_)
