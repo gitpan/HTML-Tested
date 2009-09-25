@@ -25,4 +25,11 @@ sub strftime {
 	return Dumper(\@res);
 }
 
+sub clone { return shift(); }
+sub set_locale {
+	my $self = shift;
+	$self->{_dt}->set_locale(@_);
+	return $self;
+}
+
 1;

@@ -23,7 +23,7 @@ HTML::Tested::Seal->instance('boo boo boo');
 package T;
 use base 'HTML::Tested';
 
-__PACKAGE__->ht_add_widget(::HTV, d => is_datetime => '%x');
+__PACKAGE__->ht_add_widget(::HTV, d => is_datetime => '%b %d, %Y');
 
 package main;
 
@@ -39,7 +39,7 @@ is_deeply($stash, { d => '' });
 
 $obj = T->ht_load_from_params(d => 'Oct 27, 1976');
 $obj->ht_render($stash);
-is_deeply($stash, { d => 'Oct 27, 1976' });
+is_deeply($stash, { d => 'Oct 27, 1976' }) or exit 1;
 
 package T2;
 use base 'HTML::Tested';
@@ -133,9 +133,8 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
 my $dur = DateTime::Duration->new(seconds => 5);
 $obj->d($obj->d - $dur);
 $obj->ht_render($stash);
-$SIG{__WARN__} = sub { diag(Carp::longmess(@_)); };
 is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
-		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []);
+		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []) or die;
 
 package T5;
 use base 'HTML::Tested';
