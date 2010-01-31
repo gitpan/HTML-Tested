@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 36;
+use Test::More tests => 37;
 use DateTime;
 use DateTime::Duration;
 use HTML::Tested::Test::Request;
@@ -115,6 +115,7 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash,
 		{ HT_SEALED_dd => [ [ 1, $dt1 ], [ 2, $dt2, 1 ] ] }) ], [])
 	or diag(Dumper($stash));
 
+$dt = HTML::Tested::Test::DateTime->now(10);
 my $now = DateTime->now(time_zone => POSIX::strftime('%z', localtime));
 
 package T4;
@@ -131,17 +132,16 @@ is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
 		, { d => $now }) ], []);
 
 my $dur = DateTime::Duration->new(seconds => 5);
-$obj->d($obj->d - $dur);
+$obj->d($obj->d + $dur);
 $obj->ht_render($stash);
-is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash
-		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []) or die;
+is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash, { d => $dt }) ], []) or die;
 
 package T5;
 use base 'HTML::Tested';
 __PACKAGE__->ht_add_widget(::HTV . "::Marked", d => 'is_datetime' => '%c');
 
 package main;
-$obj = T5->new({ d => ($now - $dur) });
+$obj = T5->new({ d => ($now + $dur) });
 $stash = {};
 $obj->ht_render($stash);
 
@@ -157,3 +157,13 @@ is_deeply([ HTML::Tested::Test->check_text(ref($obj), $str
 		, { d => HTML::Tested::Test::DateTime->now(10) }) ], []);
 my (undef, undef, $h) = localtime(time);
 like(HTML::Tested::Test::DateTime->now->strftime('%H'), qr/$h/);
+
+
+$dt = HTML::Tested::Test::DateTime->now(3);
+sleep 1;
+$now = DateTime->now(time_zone => POSIX::strftime('%z', localtime));
+$obj = T5->new({ d => $now });
+$stash = {};
+$obj->ht_render($stash);
+is_deeply([ HTML::Tested::Test->check_stash(ref($obj), $stash, { d => $dt }) ], []);
+

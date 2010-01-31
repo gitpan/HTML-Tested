@@ -19,7 +19,7 @@ sub strftime {
 	my $self = shift;
 	my @res;
 	for (my $i = 0; $i < $self->{_interval}; $i++) {
-		my $d = $self->{_dt} - DateTime::Duration->new(seconds => $i);
+		my $d = $self->{_dt} + DateTime::Duration->new(seconds => $i);
 		push @res, $d->strftime(@_);
 	}
 	return Dumper(\@res);
