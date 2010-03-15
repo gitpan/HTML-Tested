@@ -46,7 +46,7 @@ $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
 <option value="1">a</option>
-<option value="2" selected>b</option>
+<option value="2" selected="selected">b</option>
 </select>
 ENDS
 is_deeply($object->v, [
@@ -59,7 +59,7 @@ $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
 <option value="1">a</option>
-<option value="2" selected>b&lt;</option>
+<option value="2" selected="selected">b&lt;</option>
 </select>
 ENDS
 
@@ -86,7 +86,7 @@ $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
 <option value="A">One</option>
-<option value="B" selected>Two</option>
+<option value="B" selected="selected">Two</option>
 </select>
 ENDS
 
@@ -106,7 +106,7 @@ $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
 <option value="A">One</option>
-<option value="B" selected>Two</option>
+<option value="B" selected="selected">Two</option>
 </select>
 ENDS
 
@@ -116,7 +116,7 @@ $stash = {};
 $object->ht_render($stash);
 is_deeply($stash, { v => <<ENDS }) or diag(Dumper($stash));
 <select id="v" name="v">
-<option value="A" selected>One</option>
+<option value="A" selected="selected">One</option>
 <option value="B">Two</option>
 </select>
 ENDS

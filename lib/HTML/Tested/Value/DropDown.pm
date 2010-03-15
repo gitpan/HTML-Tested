@@ -29,7 +29,7 @@ OUT:
 sub value_to_string {
 	my ($self, $name, $val) = @_;
 	my $options = join("\n", map {
-		my $sel = $_->[2] ? " selected" : "";
+		my $sel = $_->[2] ? " selected=\"selected\"" : "";
 		"<option value=\"$_->[0]\"$sel>$_->[1]</option>"
 	} @$val);
 	return <<ENDS;
