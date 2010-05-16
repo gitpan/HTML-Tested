@@ -64,9 +64,9 @@ use strict;
 use warnings FATAL => 'all';
 
 package HTML::Tested;
-use base 'Class::Accessor', 'Class::Data::Inheritable', 'Exporter';
+use base 'Exporter', 'Class::Accessor', 'Class::Data::Inheritable';
 use Carp;
-our $VERSION = '0.56';
+our $VERSION = '0.57';
 
 our @EXPORT_OK = qw(HT HTV);
 
