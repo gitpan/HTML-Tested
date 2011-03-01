@@ -7,8 +7,7 @@ use Data::Dumper;
 use Text::Diff;
 use Carp;
 
-our @EXPORT_OK = qw(Register_Widget_Tester Stash_Mismatch
-	Ensure_Value_To_Check);
+our @EXPORT_OK = qw(Register_Widget_Tester Stash_Mismatch Ensure_Value_To_Check);
 
 sub Stash_Mismatch {
 	my ($n, $res, $v) = @_;

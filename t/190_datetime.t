@@ -44,7 +44,7 @@ is_deeply($stash, { d => 'Oct 27, 1976' }) or exit 1;
 package T2;
 use base 'HTML::Tested';
 __PACKAGE__->ht_add_widget(::HTV, e => is_datetime => {
-		pattern => '%x', locale => 'ru' });
+		pattern => '%x', locale => 'ru_RU' });
 
 package main;
 
